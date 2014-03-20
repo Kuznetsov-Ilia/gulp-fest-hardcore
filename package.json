@@ -1,0 +1,23 @@
+{
+  "author": "Ilia Kuznetsov",
+  "name": "gulp-fest-hardcore",
+  "preferGlobal": "true",
+  "version": "0.1",
+  "private": false,
+  "contributors": [
+    {
+      "name": "Ilia Kuznetsov",
+      "email": "killxxxvi@mail.ru"
+    }
+  ],
+  "scripts": {},
+  "dependencies": {
+    "through2": "*",
+    "gulp-util": "*",
+    "sax": "*"
+  },
+  "devDependencies": {
+  },
+  "analyze": false,
+  "license": "MIT"
+}
