@@ -1,4 +1,4 @@
-const PLUGIN_NAME = 'fest-simple';
+const PLUGIN_NAME = 'gulp-fest-hardcore';
 var through = require('through2');
 var gutil = require('gulp-util');
 //var log = gutil.log;
