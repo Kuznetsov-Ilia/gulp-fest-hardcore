@@ -447,7 +447,6 @@ function closeScope(_this, node) {
 }*/
 
 function getPrevClosed(_this, name) {
-  log('getPrevClosed', _this.name, name);
   while (_this.name === name) {
     _this = _this.prevClosed;
   }
