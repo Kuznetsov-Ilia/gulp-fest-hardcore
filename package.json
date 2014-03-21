@@ -1,7 +1,11 @@
 {
   "author": "Ilia Kuznetsov",
   "name": "gulp-fest-hardcore",
-  "preferGlobal": "true",
+  "description": "Rename files",
+  "keywords": [
+    "gulpplugin"
+  ],
+  "preferGlobal": false,
   "version": "0.0.1",
   "private": false,
   "contributors": [
@@ -10,6 +14,7 @@
       "email": "killxxxvi@mail.ru"
     }
   ],
+  "main": "./index.js",
   "scripts": {},
   "dependencies": {
     "through2": "*",

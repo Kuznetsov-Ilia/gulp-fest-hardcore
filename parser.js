@@ -8,8 +8,7 @@ function Parser() {
   var parser = sax.parser(false, {
     trim: true,
     xmlns: true,
-    lowercase: true,
-    //noscript: true
+    lowercase: true
   });
   parser.onopentag = onopentag;
   parser.onclosetag = onclosetag;

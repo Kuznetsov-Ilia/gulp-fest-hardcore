@@ -1,7 +1,7 @@
 const PLUGIN_NAME = 'gulp-fest-hardcore';
 var through = require('through2');
 var gutil = require('gulp-util');
-//var log = gutil.log;
+var log = gutil.log;
 var PluginError = gutil.PluginError;
 var Parser = require('./parser.js');
 
@@ -14,6 +14,7 @@ module.exports = function () {
     }
 
     if (file.isBuffer()) {
+      log('Buffer mode');
       var parser = new Parser();
       parser.write(file.contents.toString('utf8'), file.path);
       file.contents = parser.getSource();
@@ -24,6 +25,9 @@ module.exports = function () {
 
     if (file.isStream()) {
       this.emit('error', new PluginError(PLUGIN_NAME, 'Streams not supported!'));
+      log('Stream mode');
+
+      //file.contents = file.contents.pipe(Parser());
       this.push(file);
       return callback();
     }
