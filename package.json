@@ -6,14 +6,12 @@
     "gulpplugin"
   ],
   "preferGlobal": false,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
-  "contributors": [
-    {
-      "name": "Ilia Kuznetsov",
-      "email": "killxxxvi@mail.ru"
-    }
-  ],
+  "contributors": [{
+    "name": "Ilia Kuznetsov",
+    "email": "killxxxvi@mail.ru"
+  }],
   "main": "./index.js",
   "scripts": {},
   "dependencies": {
@@ -21,8 +19,7 @@
     "gulp-util": "*",
     "sax": "*"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "analyze": false,
   "license": "MIT"
 }
