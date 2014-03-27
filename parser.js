@@ -201,17 +201,17 @@ function onclosetag() {
     var expr = node.innerExpressions.join(';') || '';
     var source = node.innerSource.join('+') || '""';
     this.expressions.push(
-      'var expr# = "";'                   .replace('#', node.exprCnt) +
-      'if ( {list} && {list}.length ) {'  .replace(/\{list\}/g, list) +
+      'var expr# = "";'.replace('#', node.exprCnt) +
+      'if ( {list} && {list}.length ) {'.replace(/\{list\}/g, list) +
       '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'
-                                          .replace('{list}', list)
-                                          .replace(/\{i\}/g, i) +
-      '    var {value} = {list}[{i}];'    .replace('{list}', list)
-                                          .replace('{i}', i)
-                                          .replace('{value}', value) +
-      '    {expressions}'                 .replace('{expressions}',expr) +
-      '    expr# += {source}'             .replace('#', node.exprCnt)
-                                          .replace('{source}', source) +
+      .replace('{list}', list)
+      .replace(/\{i\}/g, i) +
+      '    var {value} = {list}[{i}];'.replace('{list}', list)
+      .replace('{i}', i)
+      .replace('{value}', value) +
+      '    {expressions}'.replace('{expressions}', expr) +
+      '    expr# += {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       '  }' +
       '}'
     );
@@ -223,10 +223,10 @@ function onclosetag() {
     var expressions = node.innerExpressions.join(';') || '';
     var source = node.innerSource.join('+') || '';
     this.expressions.push(
-      'var expr# = "";'       .replace('#', node.exprCnt) +
-      'switch ({test}) {'     .replace('{test}', test) +
-      '  {expressions}'       .replace('{expressions}', expressions) +
-      '  {source}'            .replace('{source}', source) +
+      'var expr# = "";'.replace('#', node.exprCnt) +
+      'switch ({test}) {'.replace('{test}', test) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  {source}'.replace('{source}', source) +
       '}'
     );
     return;
@@ -236,11 +236,11 @@ function onclosetag() {
     var expressions = node.innerExpressions.join(';') || '';
     var source = node.innerSource.join('+') || '""';
     this.expressions.push(
-      'var expr# = "";'         .replace('#', node.exprCnt) +
-      'if ({test}) {'           .replace('{test}', test) +
-      '  {expressions}'         .replace('{expressions}', expressions)+
-      '  expr# = {source}'      .replace('#', node.exprCnt)
-                                .replace('{source}', source) +
+      'var expr# = "";'.replace('#', node.exprCnt) +
+      'if ({test}) {'.replace('{test}', test) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  expr# = {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       '}'
     );
     return;
@@ -251,10 +251,10 @@ function onclosetag() {
     var source = node.innerSource.join('+') || '""';
     this.expressions.push(
       (this.expressions.pop() || '') +
-      'else if ({test}) {'      .replace('{test}', test) +
-      '  {expressions}'         .replace('{expressions}', expressions)+
-      '  expr# = {source}'      .replace('#', node.exprCnt)
-                                .replace('{source}', source) +
+      'else if ({test}) {'.replace('{test}', test) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  expr# = {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       '}'
     );
     return;
@@ -265,9 +265,9 @@ function onclosetag() {
     this.expressions.push(
       (this.expressions.pop() || '') +
       'else {' +
-      '  {expressions}'         .replace('{expressions}', expressions)+
-      '  expr# = {source}'      .replace('#', node.exprCnt)
-                                .replace('{source}', source) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  expr# = {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       '}'
     );
     return;
@@ -278,10 +278,10 @@ function onclosetag() {
     var source = node.innerSource.join('+') || '""';
     this.expressions.push(
       (this.expressions.pop() || '') +
-      'case {val}: '        .replace('{val}', val) +
-      '  {expressions}'     .replace('{expressions}', expressions)+
-      '  expr# = {source}'  .replace('#', node.exprCnt)
-                            .replace('{source}', source) +
+      'case {val}: '.replace('{val}', val) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  expr# = {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       ';break;'
     );
     return;
@@ -292,9 +292,9 @@ function onclosetag() {
     this.expressions.push(
       (this.expressions.pop() || '') +
       'default: ' +
-      '  {expressions}'     .replace('{expressions}', expressions) +
-      '  expr# = {source}'  .replace('#', node.exprCnt)
-                            .replace('{source}', source) +
+      '  {expressions}'.replace('{expressions}', expressions) +
+      '  expr# = {source}'.replace('#', node.exprCnt)
+      .replace('{source}', source) +
       ';break;'
     );
     return;
@@ -395,24 +395,23 @@ function openScope(_this, node) {
   switch (node.local) {
   case 'else':
   case 'elseif':
-    node.exprCnt = _this.prevClosed.exprCnt; //getPrevClosed(_this).exprCnt;
-  break;
+    node.exprCnt = _this.prevClosed.exprCnt;
+    break;
   case 'case':
   case 'default':
     node.exprCnt = _this.parent.exprCnt;
-  break;
+    break;
   case 'if':
   case 'for':
   case 'switch':
     node.exprCnt = _this.exprCnt;
     _this.exprCnt++;
     _this.source.push('expr' + node.exprCnt);
-  break;
+    break;
   }
   node.expressions = _this.expressions;
   node.source = _this.source;
   node.parent = _this.parent;
-  //node.prev = _this.prev;
   _this.expressions = [];
   _this.source = [];
   _this.parent = node;
@@ -420,15 +419,6 @@ function openScope(_this, node) {
 }
 
 function closeScope(_this, node) {
-  /*switch (node.local) {
-  case 'if':
-  case 'for':
-  case 'switch':
-    node.exprCnt = _this.exprCnt;
-    _this.exprCnt++;
-    break;
-  }*/
-
   node.innerSource = _this.source;
   node.innerExpressions = _this.expressions;
   _this.source = node.source;
@@ -436,15 +426,6 @@ function closeScope(_this, node) {
   _this.parent = node.parent;
   _this.prevClosed = node;
 }
-
-
-/*function getName(name) {
-  if (/^[a-zA-Z_]+$/.test(name)) {
-    return '.' + name;
-  } else {
-    return '["' + escapeJS(name) + '"]';
-  }
-}*/
 
 function getPrevClosed(_this, name) {
   while (_this.name === name) {
