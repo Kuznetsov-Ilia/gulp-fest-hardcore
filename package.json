@@ -19,7 +19,11 @@
     "gulp-util": "*",
     "sax": "*"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gulp": "*",
+    "gulp-rename": "*",
+    "gulp-beautify": "*"
+  },
   "analyze": false,
   "license": "MIT"
 }
