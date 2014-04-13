@@ -1,0 +1,25 @@
+<set name="name0" />
+<!--
+  function name0(){return ""}
+-->
+
+<set name="name1" params="myparams">
+  <div class="{params.className}">
+    <value>params.text</value>
+  </div>
+</set>
+<!--
+  function name1(myparams) {
+    return '<div class="' + __params1__.className + '">' + __params1__.text + '</div>'
+  }
+-->
+<set name="name2">
+  <div class="{params.className}">
+    <value>params.text</value>
+  </div>
+</set>
+<!--
+  function name2(params) {
+    return '<div class="' + __params1__.className + '">' + __params1__.text + '</div>'
+  }
+-->

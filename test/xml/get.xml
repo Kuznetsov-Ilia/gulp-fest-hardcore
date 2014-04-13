@@ -1,0 +1,42 @@
+<get name="name0" />
+<!--
+  name0()
+-->
+
+<get name="name1">{some: 'data'}</get>
+<!--
+  __params1__ = {some: 'data'}
+  name1(__params1__)
+-->
+
+<get name="name2">
+  <params>
+    {a: 1, b:2}
+  </params>
+  <param name="html">
+  <div class="a">1</div>
+  </param>
+  <param name="data" value="params" />
+  <param name="data2" select="params.text ? 1 : 2" />
+</get>
+<!--
+  __params2__ = {}
+  $.extend(__params2__, {a: 1, b:2})
+  __params2__.html = '<div class="a">1</div>'
+  __params2__.data = {c:3, d:4}
+  __params2__.data2 = params.text ? 1 : 2
+  name2(__params2__)
+-->
+
+<get name="name3" params="{a:1, b:2}" />
+<!--
+  __params3__ = {a:1, b:2}
+  name3(__params3__)
+-->
+
+<get select=" params.test ? 'name4' : 'name5' ">{some: 'data'}</get>
+<!--
+  __params4__ = {some: 'data'}
+  __expr4__ = params.test ? 'name4' : 'name5'
+  __expr4__(__params4__)
+-->

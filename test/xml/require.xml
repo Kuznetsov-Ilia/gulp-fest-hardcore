@@ -1,0 +1,40 @@
+<require name="name0">{some: 'data'}</require>
+<!--
+  var __params0__ = {some: 'data'};
+  require("name0")(__params0__);
+-->
+
+<require name="name1">
+  <params>{a: 1, b:2}</params>
+  <param name="html">
+  <div class="a">1</div>
+  </param>
+</require>
+<!--
+  var __params1__ = {};
+  $.extend(__params1__, {a: 1, b:2});
+  __params1__.html = '<div class="a">1</div>';
+  require("name1")(__params1__);
+-->
+
+<require name="name2" params="{a:1, b:2}" />
+<!--
+  var __params2__ = {a:1, b:2};
+  require("name2")(__params2__);
+-->
+
+<require name="name3" params="{a:1, b:2}">
+  {a:2,b:3,c:4}
+</require>
+<!--
+  var __params3__ = {a:1, b:2};
+  $.extend(__params3__, {a:2,b:3,c:4});
+  require("name3")(__params3__);
+-->
+
+<require select=" params.test ? 'name4' : 'name5' ">{some: 'data'}</require>
+<!--
+  __params4__ = {some: 'data'}
+  __expr4__ = params.test ? 'name4' : 'name5'
+  require(__expr4__)(__params4__)
+-->
