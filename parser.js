@@ -176,9 +176,6 @@ function onopentag(node) {
         '__params#__.{name} = {value};'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value).replace('{value}', value)
       );
     } else {
-      if (!this.parent) {
-        log(this);
-      }
       this.source.push(
         this.source.pop() || '' +
         ';__params#__.{name} = ""'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value)
@@ -222,26 +219,26 @@ function onclosetag() {
       var expr = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
-        'local expr# = ""\n                             \n'.replace('#', node.exprCnt) +
+        'local __expr#__ = ""\n                         \n'.replace('#', node.exprCnt) +
         'if {list} and next({list}) then\n              \n'.replace(/\{list\}/g, list) +
-        '  expr# = {}\n                                 \n'.replace('#', node.exprCnt) +
+        '  __expr#__ = {}\n                             \n'.replace('#', node.exprCnt) +
         '  for {i}, {value} in ipairs({list}) do\n      \n'.replace('{i}', i).replace('{value}', value).replace('{list}', list) +
         '    {expressions}\n                            \n'.replace('{expressions}', expr) +
-        '    table.insert(expr#, {source})\n            \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '    table.insert(__expr#__, {source})\n        \n'.replace('#', node.exprCnt).replace('{source}', source) +
         '  end\n' +
-        '  expr# = table.concat(expr#)\n                \n'.replace(/#/g, node.exprCnt) +
+        '  __expr#__ = table.concat(__expr#__)\n        \n'.replace(/#/g, node.exprCnt) +
         'end\n'
       );
     } else {
       var expr = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
       this.expressions.push(
-        'var expr# = "";                                '.replace('#', node.exprCnt) +
+        'var __expr#__ = "";                            '.replace('#', node.exprCnt) +
         'if ( {list} && {list}.length ) {               '.replace(/\{list\}/g, list) +
         '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'.replace('{list}', list).replace(/\{i\}/g, i) +
         '    var {value} = {list}[{i}];                 '.replace('{list}', list).replace('{i}', i).replace('{value}', value) +
         '    {expressions}                              '.replace('{expressions}', expr) +
-        '    expr# += {source}                          '.replace('#', node.exprCnt).replace('{source}', source) +
+        '    __expr#__ += {source}                      '.replace('#', node.exprCnt).replace('{source}', source) +
         '  }' +
         '}'
       );
@@ -254,8 +251,8 @@ function onclosetag() {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
       this.expressions.push(
-        'local expr# = ""\n                                \n'.replace('#', node.exprCnt) +
-        'local test# = {test}\n                            \n'.replace('#', node.exprCnt).replace('{test}', test) +
+        'local __expr#__ = ""\n                            \n'.replace('#', node.exprCnt) +
+        'local __test#__ = {test}\n                        \n'.replace('#', node.exprCnt).replace('{test}', test) +
         '{expressions}\n                                   \n'.replace('{expressions}', expressions) +
         '{source}\n                                        \n'.replace('{source}', source)
       );
@@ -263,7 +260,7 @@ function onclosetag() {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '';
       this.expressions.push(
-        'var expr# = "";                                  '.replace('#', node.exprCnt) +
+        'var __expr#__ = "";                              '.replace('#', node.exprCnt) +
         'switch ({test}) {                                '.replace('{test}', test) +
         '  {expressions}                                  '.replace('{expressions}', expressions) +
         '  {source}                                       '.replace('{source}', source) +
@@ -287,9 +284,9 @@ function onclosetag() {
       }
       this.expressions.push(
         prevExpr +
-        '{token} test# == {val} then\n      \n'.replace('{token}', token).replace('#', node.exprCnt).replace('{val}', val) +
+        '{token} __test#__ == {val} then\n      \n'.replace('{token}', token).replace('#', node.exprCnt).replace('{val}', val) +
         '  {expressions}\n                  \n'.replace('{expressions}', expressions) +
-        '  expr# = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
     } else {
@@ -299,7 +296,7 @@ function onclosetag() {
         (this.expressions.pop() || '') +
         'case {val}:                        '.replace('{val}', val) +
         '  {expressions}                    '.replace('{expressions}', expressions) +
-        '  expr# = {source};                '.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source};                '.replace('#', node.exprCnt).replace('{source}', source) +
         'break;'
       );
     }
@@ -317,7 +314,7 @@ function onclosetag() {
         prevExpr +
         'else\n' +
         '  {expressions}\n                   \n'.replace('{expressions}', expressions) +
-        '  expr# = {source}\n                \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}\n                \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
     } else {
@@ -327,7 +324,7 @@ function onclosetag() {
         (this.expressions.pop() || '') +
         'default: ' +
         '  {expressions}                        '.replace('{expressions}', expressions) +
-        '  expr# = {source};                    '.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source};                    '.replace('#', node.exprCnt).replace('{source}', source) +
         'break;'
       );
     }
@@ -340,20 +337,20 @@ function onclosetag() {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
-        'local expr# = ""\n                             \n'.replace('#', node.exprCnt) +
+        'local __expr#__ = ""\n                             \n'.replace('#', node.exprCnt) +
         'if {test} then\n                               \n'.replace('{test}', test) +
         '  {expressions}\n                              \n'.replace('{expressions}', expressions) +
-        '  expr# = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
       this.expressions.push(
-        'var expr# = "";                                '.replace('#', node.exprCnt) +
+        'var __expr#__ = "";                                '.replace('#', node.exprCnt) +
         'if ({test}) {                                  '.replace('{test}', test) +
         '  {expressions}                                '.replace('{expressions}', expressions) +
-        '  expr# = {source}                             '.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}                             '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
     }
@@ -372,7 +369,7 @@ function onclosetag() {
         prevExpr +
         'elseif {test} then\n             \n'.replace('{test}', test) +
         '  {expressions}\n                \n'.replace('{expressions}', expressions) +
-        '  expr# = {source}\n             \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}\n             \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
     } else {
@@ -382,7 +379,7 @@ function onclosetag() {
         (this.expressions.pop() || '') +
         'else if ({test}) {               '.replace('{test}', test) +
         '  {expressions}                  '.replace('{expressions}', expressions) +
-        '  expr# = {source}               '.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}               '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
     }
@@ -401,7 +398,7 @@ function onclosetag() {
         prevExpr +
         'else\n' +
         '  {expressions}\n                  \n'.replace('{expressions}', expressions) +
-        '  expr# = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
     } else {
@@ -411,7 +408,7 @@ function onclosetag() {
         (this.expressions.pop() || '') +
         'else {' +
         '  {expressions}                    '.replace('{expressions}', expressions) +
-        '  expr# = {source}                 '.replace('#', node.exprCnt).replace('{source}', source) +
+        '  __expr#__ = {source}                 '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
     }
@@ -422,7 +419,10 @@ function onclosetag() {
       case 'html':
       case 'js':
       case 'json':
-        this.source.push(')');
+        this.source.push(
+          (this.source.pop() || '') +
+          ')'
+        );
         break;
       }
     }
@@ -476,7 +476,7 @@ function onclosetag() {
       this.expressions.push(source);
     }
     this.source.push(
-      '{name}(__params#__)                   '.replace('{name}', name).replace('#', node.exprCnt)
+      '{name}(__params#__)                        '.replace('{name}', name).replace('#', node.exprCnt)
     );
     return;
   case 'require':
@@ -506,7 +506,7 @@ function onclosetag() {
       this.expressions.push(source);
     }
     this.source.push(
-      'require({name})(__params#__)             '.replace('{name}', name).replace('#', node.exprCnt)
+      'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
     );
     break;
   }
@@ -530,13 +530,15 @@ function ontext(text) {
       '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
     );
     break;
-  case 'var':
   case 'value':
     var tmpExpr = _getExpr(text);
     if (this.lang === 'lua') {
       tmpExpr = getLuaExpr(tmpExpr);
     }
-    this.source.push(getName(tmpExpr));
+    this.source.push(
+      (this.source.pop() || '') +
+      getName(tmpExpr)
+    );
     break;
   default:
     this.source.push('"' + escapeJS(text) + '"');
@@ -568,7 +570,7 @@ function openScope(_this, node) {
   case 'switch':
     node.exprCnt = _this.exprCnt;
     _this.exprCnt++;
-    _this.source.push('expr' + node.exprCnt);
+    _this.source.push('__expr#__'.replace('#', node.exprCnt));
     break;
   case 'get':
   case 'require':
@@ -598,7 +600,6 @@ function getPrevClosed(_this, name) {
   while (_this.name === name) {
     _this = _this.prevClosed;
   }
-  log('found', _this.name);
   return _this;
 }
 

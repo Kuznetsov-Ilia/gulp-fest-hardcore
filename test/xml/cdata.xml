@@ -1,0 +1,4 @@
+<cdata>
+  alert ("2"
+  < 3); </cdata>
+    <!-- <![CDATA[alert ("2" < 3);]]> -->

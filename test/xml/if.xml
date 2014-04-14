@@ -1,0 +1,9 @@
+<if test="var0">
+  <value>var0</value>
+</if>
+<elseif test="var2">
+  <value>var2</value>
+</elseif>
+<else>
+  ELSE
+</else>

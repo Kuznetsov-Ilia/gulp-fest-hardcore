@@ -50,9 +50,14 @@ _Замечание: начальные и конечные пробелы в т
 ### value
 
 Служит для вывода значения JavaScript выражения. Поддерживаем 4 режима вывода: text (по умолчанию), html, js и json.
+Использует глобальные функции: `$.escapeHTML(value)`, `$.escapeJS(value)`, `$.escapeJSON(value)` - их следует определить самостоятельно,
+или использовать следующие:
+
+
+
 
 ```xml
-<var name="value" value='"<script/>"' />
+<vars value='"<script/>"' />
 <value>value</value><!-- "<script/>" -->
 <value escape="html">value</value><!-- &quot;&lt;script/&gt;&quot; -->
 <value escape="js">value</value><!-- \"\u003Cscript\/\u003E\" -->
@@ -115,8 +120,7 @@ require("name3")(__params3__);
 
 
 ### set
-TODO!!!
-Объявляет именованный блок. Содержимое `set` не будет выполнено до тех пор, пока не будет вызван блок с таким же имененем с помощью `get`.
+Объявляет именованную функцию. Содержимое `set` не будет выполнено до тех пор, пока не будет вызван блок с таким же имененем с помощью `get`.
 ```xml
 <set name="name">John</set>
 ```
@@ -162,7 +166,7 @@ TODO!!!
 Внутри атрибута `name` можно использовать JavaScript выражения для вычисления имени блока во время выполнения. Значения выражений, заключенных в фигурные скобки, объединяются с примыкающим текстом. Помимо этого, можно использовать атрибут `select`.
 
 ```xml
-<var name="name" value="'foo'" />
+<vars name="'foo'" />
 <get select="name"/><!-- foo -->
 <set name="foo">foo</set>
 <set name="bar">bar</set>
@@ -183,7 +187,7 @@ TODO!!!
 
 ```xml
 <!-- params.items = ['a', 'b', 'c'] -->
-<for iterate="params.items" index="i">
+<for iterate="params.items" index="i" value="v">
   <value>params.items[i]</value>
 </for><!-- abc -->
 
@@ -208,8 +212,8 @@ TODO!!!
 Условный оператор.
 
 ```xml
-<if test="var">
-  <value>var</value>
+<if test="var0">
+  <value>var0</value>
 </if>
 <elseif test="var2">
    <value>var2</value>
@@ -222,7 +226,7 @@ TODO!!!
 ### switch case default
 
 ```xml
-<switch test="var">
+<switch test="var0">
   <case is="1">
     var is 1
   </case>

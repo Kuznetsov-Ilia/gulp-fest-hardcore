@@ -1,0 +1,21 @@
+<!-- params.items = ['a', 'b', 'c'] -->
+<for iterate="params.items" index="i" value="ii">
+  <value>params.items[i]</value>
+</for>
+<!-- abc -->
+
+<!-- if (params.items && params.items.length)-->
+<for iterate="params.items" index="i" value="v">
+  <value>v</value>
+</for>
+<!-- abc -->
+<!-- /if -->
+<elseif test="foo">
+  foo text
+</elseif>
+<elseif test="bar">
+  bar text
+</elseif>
+<else>
+  else text
+</else>

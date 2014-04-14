@@ -23,3 +23,32 @@
     return '<div class="' + __params1__.className + '">' + __params1__.text + '</div>'
   }
 -->
+
+<set name="name">John</set>
+<set name="full_name">
+  <get name="name" />
+  <space/>F. Kennedy
+</set>
+
+<set name="line">
+  Hello,
+  <space/>
+  <value>params.username</value>!
+</set>
+<get name="line">{username: "John"}</get>
+<!-- Hello, John! -->
+
+
+<set name="host">http://e.mail.ru</set>
+<set name="all">msglist</set>
+<set name="_new">sentmsg?compose</set>
+
+<set name="all_link">
+  <get name="host" />/
+  <get name="all" />
+</set>
+
+<set name="new_link">
+  <get name="host" />/
+  <get name="_new" />
+</set>

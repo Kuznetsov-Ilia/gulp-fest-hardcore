@@ -1,0 +1,14 @@
+<switch test="var0">
+  <case is="1">
+    var is 1
+  </case>
+  <case is="'2'">
+    var is '2'
+  </case>
+  <case is="a">
+    var is `a`
+  </case>
+  <default>
+    var is not 1 or 2
+  </default>
+</switch>

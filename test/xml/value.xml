@@ -1,0 +1,9 @@
+<vars value='"<script/>"' />
+<value>value</value>
+<!-- "<script/>" -->
+<value escape="html">value</value>
+<!-- &quot;&lt;script/&gt;&quot; -->
+<value escape="js">value</value>
+<!-- \"\u003Cscript\/\u003E\" -->
+<value escape="json">value</value>
+<!-- "\"\u003Cscript/\u003E\"" -->
