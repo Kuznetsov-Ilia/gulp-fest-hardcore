@@ -22,7 +22,8 @@
   "devDependencies": {
     "gulp": "*",
     "gulp-rename": "*",
-    "gulp-beautify": "*"
+    "gulp-beautify": "*",
+    "gulp-spawn-shim": "8*"
   },
   "analyze": false,
   "license": "MIT"

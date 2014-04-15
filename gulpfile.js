@@ -3,8 +3,20 @@ var gutil = require('gulp-util');
 var rename = require('gulp-rename');
 var beautify = require('gulp-beautify');
 var festHardcore = require('./index.js');
-var log = gutil.log;
-gulp.task('default', function () {
+//var spawn = require('gulp-spawn-shim');
+//var log = gutil.log;
+gulp.task('default', ['fest-lua', 'fest-js']);
+
+gulp.task('fest-lua', function () {
+  return gulp.src('test/xml/*.xml')
+    .pipe(rename(function (path) {
+      path.extname = '.lua'
+    }))
+    .pipe(festHardcore('lua'))
+    .pipe(gulp.dest('test/lua'));
+})
+
+gulp.task('fest-js', function () {
   return gulp.src('test/xml/*.xml')
     .pipe(rename(function (path) {
       path.extname = '.js'
@@ -13,5 +25,5 @@ gulp.task('default', function () {
     .pipe(beautify({
       indentSize: 2
     }))
-    .pipe(gulp.dest('test/output'))
+    .pipe(gulp.dest('test/js'));
 })
