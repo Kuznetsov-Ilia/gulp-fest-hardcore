@@ -29,6 +29,47 @@ Fest — это шаблонизатор общего назначения, ко
   + `case` <- `when`
   + `default` <- `otherwise`
   + `vars` <- `var`
+
+* нада быть внимательным: формируемый шаблон условно делится на выражения и возвращаемое значения.
+```xml
+<!--antipatern-->
+<value>
+  (params.c = params.a + params.b, params.c)
+</value>
+<if test="params.c">
+  fail
+</if>
+<!--
+module.exports = function (params) {
+  var __expr0__ = "";
+  if (params.c) {
+    __expr0__ = "fail"
+  }
+  return ((params.c = params.a + params.b, params.c)) + __expr0__
+}
+-->
+```
+
+```xml
+<!--patern-->
+<script>
+params.d = params.a - params.b
+</script>
+<if test="params.d">
+  good
+</if>
+<!--
+module.exports = function (params) {
+  params.d = params.a - params.b;
+  var __expr1__ = "";
+  if (params.d) {
+    __expr1__ = "good"
+  }
+  return __expr1__
+}
+-->
+```
+
 ## Установка
 
 ```
