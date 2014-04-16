@@ -1,0 +1,14 @@
+<value>
+  (params.c = params.a + params.b, params.c)
+</value>
+<if test="params.c">
+  fail
+</if>
+
+
+<script>
+params.d = params.a - params.b
+</script>
+<if test="params.d">
+  good
+</if>
