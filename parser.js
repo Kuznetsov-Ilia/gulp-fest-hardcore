@@ -477,7 +477,11 @@ function onclosetag() {
       name = _getAttr(node, 'name');
     } else if (node.attributes.select) {
       name = '__expr#__'.replace('#', node.exprCnt);
-      this.expressions.push('var ' + name + '=' + _getAttr(node, 'select', 'expr'));
+      if (this.lang === 'lua') {
+        this.expressions.push('local ' + name + '=' + _getAttr(node, 'select', 'expr'));
+      } else {
+        this.expressions.push('var ' + name + '=' + _getAttr(node, 'select', 'expr'));
+      }
     }
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
