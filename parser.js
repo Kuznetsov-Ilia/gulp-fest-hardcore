@@ -133,10 +133,19 @@ function onopentag(node) {
         }
         break;
       case 'js':
-        this.source.push('$.escapeJS(""');
+        if (this.lang === 'lua') {
+          this.source.push('U.escapeJS(""');
+        } else {
+          this.source.push('$.escapeJS(""');
+        }
         break;
       case 'json':
-        this.source.push('$.escapeJSON(""');
+        log('escape json is not implemented');
+        if (this.lang === 'lua') {
+          this.source.push('U.escapeJSON(""');
+        } else {
+          this.source.push('$.escapeJSON(""');
+        }
         break;
       }
     }
@@ -403,7 +412,7 @@ function onclosetag() {
       this.expressions.push(
         prevExpr +
         'else\n' +
-        '  {expressions}\n                  \n'.replace('{expressions}', expressions) +
+        '  {expressions}\n                      \n'.replace('{expressions}', expressions) +
         '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
@@ -413,7 +422,7 @@ function onclosetag() {
       this.expressions.push(
         (this.expressions.pop() || '') +
         'else {' +
-        '  {expressions}                    '.replace('{expressions}', expressions) +
+        '  {expressions}                        '.replace('{expressions}', expressions) +
         '  __expr#__ = {source}                 '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
@@ -639,12 +648,9 @@ function getEval(compile_file, parser, filepath) {
 function getExpr(compile_file, parser, filepath) {
   return function (value, where) {
     try {
-      //console.log('before: ', value);
       value = value.replace(/;+\s*$/, '');
-      //console.log('after: ', value);
       (new Function('(' + value + ')'));
     } catch (e) {
-      //console.error(e);
       throw new Error(errorMessage((where || 'node') + ' has ' + e, parser.line, compile_file, filepath));
     }
     return value;
