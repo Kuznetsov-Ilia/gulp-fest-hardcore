@@ -1,4 +1,4 @@
-return function (params) {
+return function (params)
   local __expr0__ = ""
                             
 local __test0__ = var0
@@ -33,4 +33,4 @@ end
                                         
 
   return __expr0__
-}
+end

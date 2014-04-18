@@ -158,9 +158,15 @@ function onopentag(node) {
         );
       }
     }
-    this.expressions.push('var {vars};'
-      .replace('{vars}', vars.join(','))
-    );
+    if (this.lang === 'lua') {
+      this.expressions.push('local {vars};'
+        .replace('{vars}', vars.join(','))
+      );
+    } else {
+      this.expressions.push('var {vars};'
+        .replace('{vars}', vars.join(','))
+      );
+    }
     return;
   case 'param':
     var value = '';
@@ -363,7 +369,7 @@ function onclosetag() {
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
       if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr.slice(0, -4);
+        prevExpr = prevExpr.slice(0, -4);
       }
       this.expressions.push(
         prevExpr +
@@ -392,7 +398,7 @@ function onclosetag() {
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
       if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr.slice(0, -4);
+        prevExpr = prevExpr.slice(0, -4);
       }
       this.expressions.push(
         prevExpr +
@@ -438,17 +444,22 @@ function onclosetag() {
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
+      this.expressions.push(
+        'function {name} ({params})           '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
+        '  {expressions}                      '.replace('{expressions}', expressions) +
+        '  return {source}                    '.replace('{source}', source) +
+        'end'
+      );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
+      this.expressions.push(
+        'function {name} ({params}){          '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
+        '  {expressions}                      '.replace('{expressions}', expressions) +
+        '  return {source}                    '.replace('{source}', source) +
+        '}'
+      );
     }
-
-    this.expressions.push(
-      'function {name} ({params}){          '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
-      '  {expressions}                      '.replace('{expressions}', expressions) +
-      '  return {source}                    '.replace('{source}', source) +
-      '}'
-    );
     return;
   case 'get':
     closeScope(this, node);
@@ -462,13 +473,16 @@ function onclosetag() {
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
+      this.expressions.push(
+        'local __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
+      );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '';
+      this.expressions.push(
+        'var __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
+      );
     }
-    this.expressions.push(
-      'var __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
-    );
     if (expressions) {
       this.expressions.push(expressions);
     }
@@ -494,11 +508,13 @@ function onclosetag() {
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
+      this.expressions.push('local __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '';
+      this.expressions.push('var __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
     }
-    this.expressions.push('var __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
+
     if (expressions) {
       this.expressions.push(expressions);
     }
@@ -526,9 +542,15 @@ function ontext(text) {
   case 'get':
   case 'params':
   case 'require':
-    this.expressions.push(
-      '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
-    );
+    if (this.lang === 'lua') {
+      this.expressions.push(
+        'U.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
+      );
+    } else {
+      this.expressions.push(
+        '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
+      );
+    }
     break;
   case 'value':
     var tmpExpr = _getExpr(text);

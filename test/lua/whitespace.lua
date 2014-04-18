@@ -1,5 +1,5 @@
-return function (params) {
+return function (params)
   
   return "
  "
-}
+end

@@ -1,4 +1,4 @@
-return function (params) {
+return function (params)
   local __expr0__ = ""
                              
 if params.c then
@@ -23,4 +23,4 @@ if params.d then
 end
 
   return ((params.c = params.a + params.b, params.c))..__expr0__..__expr1__
-}
+end

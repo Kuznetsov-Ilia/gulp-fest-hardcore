@@ -1,4 +1,4 @@
-return function (params) {
+return function (params)
   local __expr0__ = ""
                              
 if var0 then
@@ -7,14 +7,12 @@ if var0 then
                               
   __expr0__ = (var0)
                            
-end
 elseif var2 then
              
   
                 
   __expr0__ = (var2)
              
-end
 else
   
                   
@@ -23,4 +21,4 @@ else
 end
 
   return __expr0__
-}
+end

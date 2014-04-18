@@ -1,4 +1,4 @@
-return function (params) {
+return function (params)
   local __expr0__ = ""
                          
 if params.items and next(params.items) then
@@ -31,21 +31,18 @@ if params.items and next(params.items) then
   end
   __expr1__ = table.concat(__expr1__)
         
-end
 elseif foo then
              
   
                 
   __expr1__ = "foo text"
              
-end
 elseif bar then
              
   
                 
   __expr1__ = "bar text"
              
-end
 else
   
                   
@@ -54,4 +51,4 @@ else
 end
 
   return __expr0__..__expr1__
-}
+end

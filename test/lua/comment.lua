@@ -1,4 +1,4 @@
-return function (params) {
+return function (params)
   
   return "<!--comment-->"
-}
+end
