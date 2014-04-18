@@ -1,18 +1,13 @@
 {
-  "author": "Ilia Kuznetsov",
   "name": "gulp-fest-hardcore",
-  "description": "Rename files",
-  "keywords": [
-    "gulpplugin"
-  ],
-  "preferGlobal": false,
-  "version": "0.0.3",
-  "private": false,
+  "version": "0.0.4",
+  "description": "js templator",
+  "author": "Ilia Kuznetsov",
   "contributors": [{
     "name": "Ilia Kuznetsov",
     "email": "killxxxvi@mail.ru"
   }],
-  "main": "./index.js",
+  "main": "index.js",
   "scripts": {},
   "dependencies": {
     "through2": "*",
@@ -23,8 +18,14 @@
     "gulp": "*",
     "gulp-rename": "*",
     "gulp-beautify": "*",
-    "gulp-spawn-shim": "8*"
+    "gulp-spawn-shim": "*"
   },
-  "analyze": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dashed/gulp-spawn-shim.git"
+  },
+  "keywords": [
+    "gulpplugin"
+  ],
   "license": "MIT"
 }
