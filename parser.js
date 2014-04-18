@@ -127,16 +127,16 @@ function onopentag(node) {
       switch (node.attributes.escape.value) {
       case 'html':
         if (this.lang === 'lua') {
-          this.source.push('U.escapeHTML(');
+          this.source.push('U.escapeHTML(""');
         } else {
-          this.source.push('$.escapeHTML(');
+          this.source.push('$.escapeHTML(""');
         }
         break;
       case 'js':
-        this.source.push('$.escapeJS(');
+        this.source.push('$.escapeJS(""');
         break;
       case 'json':
-        this.source.push('$.escapeJSON(');
+        this.source.push('$.escapeJSON(""');
         break;
       }
     }
@@ -558,7 +558,7 @@ function ontext(text) {
       tmpExpr = getLuaExpr(tmpExpr);
     }
     this.source.push(
-      (this.source.pop() || '') +
+      //(this.source.pop() || '') +
       getName(tmpExpr)
     );
     break;

@@ -107,8 +107,11 @@ _Замечание: начальные и конечные пробелы в т
 
 ### vars
 Устаналивает локальную JavaScript переменную.
+**имя будет принудительно переведено в lowercase**
 ```xml
-<vars question="'Ultimate Question of Life, The Universe, and Everything'" answer="question.length - 13" />
+<vars Illegar="1" question="'Ultimate Question of Life, The Universe, and Everything'" answer="question.length - 13" />
+<value>Illegar</value><!-- undefined -->
+<value>illegar</value><!-- 1 -->
 <value>question</value><!-- Ultimate Question of Life, The Universe, and Everything -->
 <value>answer</value><!-- 42  -->
 ```

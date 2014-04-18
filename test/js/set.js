@@ -4,13 +4,11 @@ module.exports = function (params) {
   };
 
   function name1(myparams) {
-    return "<div class=\"" + $.escapeHTML(params.className) + "\">"
-    params.text + "</div>"
+    return "<div class=\"" + $.escapeHTML(params.className) + "\">" + params.text + "</div>"
   };
 
   function name2(params) {
-    return "<div class=\"" + $.escapeHTML(params.className) + "\">"
-    params.text + "</div>"
+    return "<div class=\"" + $.escapeHTML(params.className) + "\">" + params.text + "</div>"
   };
 
   function name(params) {
@@ -23,8 +21,7 @@ module.exports = function (params) {
   };
 
   function line(params) {
-    return "Hello, "
-    params.username + "!"
+    return "Hello, " + params.username + "!"
   };
   var __params1__ = {};
   $.extend(__params1__, {
