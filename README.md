@@ -70,6 +70,8 @@ module.exports = function (params) {
 -->
 ```
 
+
+
 ## Установка
 
 ```
@@ -91,10 +93,94 @@ _Замечание: начальные и конечные пробелы в т
 ### value
 
 Служит для вывода значения JavaScript выражения. Поддерживаем 4 режима вывода: text (по умолчанию), html, js и json.
-Использует глобальные функции: `$.escapeHTML(value)`, `$.escapeJS(value)`, `$.escapeJSON(value)` - их следует определить самостоятельно,
+Использует глобальные функции: `$.escapeHTML(value)`, `$.escapeJS(value)` - их следует определить самостоятельно,
 или использовать следующие:
 
+```js
+$.escapeHTML = function (s) {
+  if (typeof s === 'string') {
+    if (/[&<>"]/.test(s)) {
+      return s.replace(/[&<>"]/g, function(chr) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '\"': '&quot;'
+        }[chr]
+      });
+    }
+  } else if (typeof s === 'undefined') {
+    return '';
+  }
+  return s;
+}
 
+$.escapeJS = function (s) {
+  if (typeof s==="string") {
+    if (/[\\'"\/\n\r\t\b\f<>]/g.test(s)) {
+      return s.replace(/[\\'"\/\n\r\t\b\f<>]/g, function (chr){
+        return {
+          '"': '\"',
+          '\\': '\\',
+          '/' : '\\/',
+          '\n': '\\n',
+          '\r': '\\r',
+          '\t': '\\t',
+          '\b': '\\b',
+          '\f': '\\f',
+          '\'' : '\\\'',
+          '<' : '\\u003C',
+          '>' : '\\u003E'
+        }[chr];
+      });
+    }
+  } else if (typeof s==="undefined") {
+    return "";
+  }
+  return s;
+}
+
+$.extend = function (original, extended) {
+  extended = extended || {};
+  for (var key in extended) {
+    original[key] = extended[key];
+  }
+  return original;
+}
+```
+```lua
+return {
+  escapeHTML = function (s)
+    if s == nil then return '' end
+    local esc, i = s:gsub('&', '&amp;')
+                    :gsub('<', '&lt;')
+                    :gsub('>', '&gt;')
+                    :gsub('\"', '&quot;')
+    return esc
+  end,
+  escapeJS = function (s)
+    if s == nil then return '' end
+    local esc, i = s:gsub('"', '\"')
+                    :gsub('\\', '\\')
+                    :gsub('/' , '\\/')
+                    :gsub('\n', '\\n')
+                    :gsub('\r', '\\r')
+                    :gsub('\t', '\\t')
+                    :gsub('\b', '\\b')
+                    :gsub('\f', '\\f')
+                    :gsub('\'' , '\\\'')
+                    :gsub('<' , '\\u003C')
+                    :gsub('>' , '\\u003E')
+    return esc
+  end,
+  extend = function (destination, source)
+    for k,v in pairs(source) do
+      destination[k] = v
+    end 
+    return destination
+  end
+}
+```
 
 
 ```xml
@@ -102,7 +188,6 @@ _Замечание: начальные и конечные пробелы в т
 <value>value</value><!-- "<script/>" -->
 <value escape="html">value</value><!-- &quot;&lt;script/&gt;&quot; -->
 <value escape="js">value</value><!-- \"\u003Cscript\/\u003E\" -->
-<value escape="json">value</value><!-- "\"\u003Cscript/\u003E\"" -->
 ```
 
 ### vars
