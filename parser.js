@@ -31,7 +31,7 @@ function Parser(lang) {
   this.parser = parser;
 }
 
-Parser.prototype.write = function (xmlString, filepath) {
+Parser.prototype.write = function(xmlString, filepath) {
   _getEval = getEval(xmlString, this.parser, filepath);
   _getExpr = getExpr(xmlString, this.parser, filepath);
   _getAttr = getAttr(xmlString, this.parser, filepath);
@@ -41,7 +41,7 @@ Parser.prototype.write = function (xmlString, filepath) {
 }
 var _getEval, _getExpr, _getAttr;
 
-Parser.prototype.getSource = function () {
+Parser.prototype.getSource = function() {
   var output;
   if (this.parser.lang === 'lua') {
     output = fs.readFileSync(__dirname + '/tmpl.lua').toString()
@@ -60,13 +60,13 @@ Parser.prototype.getSource = function () {
 
 
 function escapeJS(s) {
-  return s.replace(jschars, function (chr) {
+  return s.replace(jschars, function(chr) {
     return jshash[chr];
   });
 }
 
 function escapeHTML(s) {
-  return s.replace(htmlchars, function (chr) {
+  return s.replace(htmlchars, function(chr) {
     return htmlhash[chr];
   });
 }
@@ -95,108 +95,108 @@ function onopentag(node) {
 
 
   switch (node.local) {
-  case 'doctype':
-    this.source.push('"<!DOCTYPE "');
-    return;
-  case 'comment':
-    this.source.push('"<!--"');
-    return;
-  case 'cdata':
-    this.source.push('"<![CDATA["');
-    return;
-  case 'n':
-    this.source.push('"\n"');
-    return;
-  case 'space':
-    this.source.push('" "');
-    return;
-  case 'switch':
-  case 'case':
-  case 'default':
-  case 'for':
-  case 'if':
-  case 'elseif':
-  case 'else':
-  case 'set':
-  case 'get':
-  case 'require':
-    openScope(this, node);
-    return;
-  case 'value':
-    if (node.attributes.escape) {
-      switch (node.attributes.escape.value) {
-      case 'html':
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeHTML(""');
-        } else {
-          this.source.push('$.escapeHTML(""');
+    case 'doctype':
+      this.source.push('"<!DOCTYPE "');
+      return;
+    case 'comment':
+      this.source.push('"<!--"');
+      return;
+    case 'cdata':
+      this.source.push('"<![CDATA["');
+      return;
+    case 'n':
+      this.source.push('"\n"');
+      return;
+    case 'space':
+      this.source.push('" "');
+      return;
+    case 'switch':
+    case 'case':
+    case 'default':
+    case 'for':
+    case 'if':
+    case 'elseif':
+    case 'else':
+    case 'set':
+    case 'get':
+    case 'require':
+      openScope(this, node);
+      return;
+    case 'value':
+      if (node.attributes.escape) {
+        switch (node.attributes.escape.value) {
+          case 'html':
+            if (this.lang === 'lua') {
+              this.source.push('U.escapeHTML(""');
+            } else {
+              this.source.push('$.escapeHTML(""');
+            }
+            break;
+          case 'js':
+            if (this.lang === 'lua') {
+              this.source.push('U.escapeJS(""');
+            } else {
+              this.source.push('$.escapeJS(""');
+            }
+            break;
+          case 'json':
+            log('escape json is not implemented');
+            if (this.lang === 'lua') {
+              this.source.push('U.escapeJSON(""');
+            } else {
+              this.source.push('$.escapeJSON(""');
+            }
+            break;
         }
-        break;
-      case 'js':
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeJS(""');
-        } else {
-          this.source.push('$.escapeJS(""');
-        }
-        break;
-      case 'json':
-        log('escape json is not implemented');
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeJSON(""');
-        } else {
-          this.source.push('$.escapeJSON(""');
-        }
-        break;
       }
-    }
-    return;
-  case 'insert':
-  case 'include':
-  case 'var':
-    log(node.local, 'isnot implemented');
-    return;
-  case 'vars':
-    var vars = [];
-    for (var i in node.attributes) {
-      if (node.attributes[i].value === '') {
-        vars.push(node.attributes[i].value)
+      return;
+    case 'insert':
+    case 'include':
+    case 'var':
+      log(node.local, 'isnot implemented');
+      return;
+    case 'vars':
+      var vars = [];
+      for (var i in node.attributes) {
+        if (node.attributes[i].value === '') {
+          vars.push(node.attributes[i].value)
+        } else {
+          vars.push('{name}={value}'
+            .replace('{name}', i)
+            .replace('{value}', node.attributes[i].value)
+          );
+        }
+      }
+      if (this.lang === 'lua') {
+        this.expressions.push('local {vars};'
+          .replace('{vars}', vars.join(','))
+        );
       } else {
-        vars.push('{name}={value}'
-          .replace('{name}', i)
-          .replace('{value}', node.attributes[i].value)
+        this.expressions.push('var {vars};'
+          .replace('{vars}', vars.join(','))
         );
       }
-    }
-    if (this.lang === 'lua') {
-      this.expressions.push('local {vars};'
-        .replace('{vars}', vars.join(','))
-      );
-    } else {
-      this.expressions.push('var {vars};'
-        .replace('{vars}', vars.join(','))
-      );
-    }
-    return;
-  case 'param':
-    var value = '';
-    if (node.attributes.value) {
-      value = _getAttr(node, 'value', 'var');
-    } else if (node.attributes.select) {
-      value = '(' + _getAttr(node, 'select', 'expr') + ')';
-    }
+      return;
+    case 'param':
+      var value = '';
+      if (node.attributes.value) {
+        value = _getAttr(node, 'value', 'var');
+      } else if (node.attributes.select) {
+        value = '(' + _getAttr(node, 'select', 'expr') + ')';
+      }
 
-    if (value) {
-      this.source.push(
-        (this.source.pop() || '') +
-        '__params#__.{name} = {value};'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value).replace('{value}', value)
-      );
-    } else {
-      this.source.push(
-        this.source.pop() || '' +
-        ';__params#__.{name} = ""'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value)
-      );
-    }
-    return;
+      if (value) {
+        this.source.push(
+          (this.source.pop() || '') +
+          '__params#__.{name} = {value};'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value).replace('{value}', value)
+        );
+      } else {
+        this.source.push(
+          this.source.pop() || '' +
+          ';__params#__.{name} = ""'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value)
+        );
+      }
+      return;
   }
 }
 
@@ -216,328 +216,328 @@ function onclosetag() {
     this.fstack.pop();
   }
   switch (node.local) {
-  case 'doctype':
-    this.source.push('">"');
-    return;
-  case 'comment':
-    this.source.push('"-->"');
-    return;
-  case 'cdata':
-    this.source.push('"]]>"');
-    return;
-  case 'for':
-    closeScope(this, node);
-    var list = _getAttr(node, 'iterate', 'expr');
-    var i = _getAttr(node, 'index', 'var');
-    var value = _getAttr(node, 'value');
-    if (this.lang === 'lua') {
-      var expr = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      this.expressions.push(
-        'local __expr#__ = ""\n                         \n'.replace('#', node.exprCnt) +
-        'if {list} and next({list}) then\n              \n'.replace(/\{list\}/g, list) +
-        '  __expr#__ = {}\n                             \n'.replace('#', node.exprCnt) +
-        '  for {i}, {value} in ipairs({list}) do\n      \n'.replace('{i}', i).replace('{value}', value).replace('{list}', list) +
-        '    {expressions}\n                            \n'.replace('{expressions}', expr) +
-        '    table.insert(__expr#__, {source})\n        \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        '  end\n' +
-        '  __expr#__ = table.concat(__expr#__)\n        \n'.replace(/#/g, node.exprCnt) +
-        'end\n'
-      );
-    } else {
-      var expr = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        'var __expr#__ = "";                            '.replace('#', node.exprCnt) +
-        'if ( {list} && {list}.length ) {               '.replace(/\{list\}/g, list) +
-        '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'.replace('{list}', list).replace(/\{i\}/g, i) +
-        '    var {value} = {list}[{i}];                 '.replace('{list}', list).replace('{i}', i).replace('{value}', value) +
-        '    {expressions}                              '.replace('{expressions}', expr) +
-        '    __expr#__ += {source}                      '.replace('#', node.exprCnt).replace('{source}', source) +
-        '  }' +
-        '}'
-      );
-    }
-    return;
-  case 'switch':
-    closeScope(this, node);
-    var test = _getAttr(node, 'test', 'expr');
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '';
-      this.expressions.push(
-        'local __expr#__ = ""\n                            \n'.replace('#', node.exprCnt) +
-        'local __test#__ = {test}\n                        \n'.replace('#', node.exprCnt).replace('{test}', test) +
-        '{expressions}\n                                   \n'.replace('{expressions}', expressions) +
-        '{source}\n                                        \n'.replace('{source}', source)
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '';
-      this.expressions.push(
-        'var __expr#__ = "";                              '.replace('#', node.exprCnt) +
-        'switch ({test}) {                                '.replace('{test}', test) +
-        '  {expressions}                                  '.replace('{expressions}', expressions) +
-        '  {source}                                       '.replace('{source}', source) +
-        '}'
-      );
-    }
-    return;
-  case 'case':
-    closeScope(this, node);
-    var val = _getAttr(node, 'is', 'expr');
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      var prevExpr = this.expressions.pop() || '';
-      var token;
-      if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr = prevExpr.slice(0, -4);
-        token = 'elseif';
-      } else {
-        token = 'if';
-      }
-      this.expressions.push(
-        prevExpr +
-        '{token} __test#__ == {val} then\n      \n'.replace('{token}', token).replace('#', node.exprCnt).replace('{val}', val) +
-        '  {expressions}\n                  \n'.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        'end\n'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        (this.expressions.pop() || '') +
-        'case {val}:                        '.replace('{val}', val) +
-        '  {expressions}                    '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source};                '.replace('#', node.exprCnt).replace('{source}', source) +
-        'break;'
-      );
-    }
-    return;
-  case 'default':
-    closeScope(this, node);
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      var prevExpr = this.expressions.pop() || '';
-      if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr = prevExpr.slice(0, -4);
-      }
-      this.expressions.push(
-        prevExpr +
-        'else\n' +
-        '  {expressions}\n                   \n'.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}\n                \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        'end\n'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        (this.expressions.pop() || '') +
-        'default: ' +
-        '  {expressions}                        '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source};                    '.replace('#', node.exprCnt).replace('{source}', source) +
-        'break;'
-      );
-    }
-    return;
-
-  case 'if':
-    closeScope(this, node);
-    var test = _getAttr(node, 'test', 'expr');
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      this.expressions.push(
-        'local __expr#__ = ""\n                             \n'.replace('#', node.exprCnt) +
-        'if {test} then\n                               \n'.replace('{test}', test) +
-        '  {expressions}\n                              \n'.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        'end\n'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        'var __expr#__ = "";                                '.replace('#', node.exprCnt) +
-        'if ({test}) {                                  '.replace('{test}', test) +
-        '  {expressions}                                '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}                             '.replace('#', node.exprCnt).replace('{source}', source) +
-        '}'
-      );
-    }
-    return;
-  case 'elseif':
-    closeScope(this, node);
-    var test = _getAttr(node, 'test', 'expr');
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      var prevExpr = this.expressions.pop() || '';
-      if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr = prevExpr.slice(0, -4);
-      }
-      this.expressions.push(
-        prevExpr +
-        'elseif {test} then\n             \n'.replace('{test}', test) +
-        '  {expressions}\n                \n'.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}\n             \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        'end\n'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        (this.expressions.pop() || '') +
-        'else if ({test}) {               '.replace('{test}', test) +
-        '  {expressions}                  '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}               '.replace('#', node.exprCnt).replace('{source}', source) +
-        '}'
-      );
-    }
-
-    return;
-  case 'else':
-    closeScope(this, node);
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      var prevExpr = this.expressions.pop() || '';
-      if (prevExpr.slice(-4) === 'end\n') {
-        prevExpr = prevExpr.slice(0, -4);
-      }
-      this.expressions.push(
-        prevExpr +
-        'else\n' +
-        '  {expressions}\n                      \n'.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
-        'end\n'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        (this.expressions.pop() || '') +
-        'else {' +
-        '  {expressions}                        '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source}                 '.replace('#', node.exprCnt).replace('{source}', source) +
-        '}'
-      );
-    }
-    return;
-  case 'value':
-    if (node.attributes.escape) {
-      switch (node.attributes.escape.value) {
-      case 'html':
-      case 'js':
-      case 'json':
-        this.source.push(
-          (this.source.pop() || '') +
-          ')'
+    case 'doctype':
+      this.source.push('">"');
+      return;
+    case 'comment':
+      this.source.push('"-->"');
+      return;
+    case 'cdata':
+      this.source.push('"]]>"');
+      return;
+    case 'for':
+      closeScope(this, node);
+      var list = _getAttr(node, 'iterate', 'expr');
+      var i = _getAttr(node, 'index', 'var');
+      var value = _getAttr(node, 'value');
+      if (this.lang === 'lua') {
+        var expr = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        this.expressions.push(
+          'local __expr#__ = ""\n                         \n'.replace('#', node.exprCnt) +
+          'if {list} and next({list}) then\n              \n'.replace(/\{list\}/g, list) +
+          '  __expr#__ = {}\n                             \n'.replace('#', node.exprCnt) +
+          '  for {i}, {value} in ipairs({list}) do\n      \n'.replace('{i}', i).replace('{value}', value).replace('{list}', list) +
+          '    {expressions}\n                            \n'.replace('{expressions}', expr) +
+          '    table.insert(__expr#__, {source})\n        \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          '  end\n' +
+          '  __expr#__ = table.concat(__expr#__)\n        \n'.replace(/#/g, node.exprCnt) +
+          'end\n'
         );
-        break;
-      }
-    }
-    return;
-  case 'set':
-    closeScope(this, node);
-    var name;
-    if (node.attributes.name) {
-      name = _getAttr(node, 'name');
-    } else if (node.attributes.select) {
-      name = _getAttr(node, 'select', 'expr');
-    }
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '""';
-      this.expressions.push(
-        'function {name} ({params})           '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
-        '  {expressions}                      '.replace('{expressions}', expressions) +
-        '  return {source}                    '.replace('{source}', source) +
-        'end'
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '""';
-      this.expressions.push(
-        'function {name} ({params}){          '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
-        '  {expressions}                      '.replace('{expressions}', expressions) +
-        '  return {source}                    '.replace('{source}', source) +
-        '}'
-      );
-    }
-    return;
-  case 'get':
-    closeScope(this, node);
-    var name;
-    if (node.attributes.name) {
-      name = _getAttr(node, 'name');
-    } else if (node.attributes.select) {
-      name = '__expr#__'.replace('#', node.exprCnt);
-      if (this.lang === 'lua') {
-        this.expressions.push('local ' + name + '=' + _getAttr(node, 'select', 'expr'));
       } else {
-        this.expressions.push('var ' + name + '=' + _getAttr(node, 'select', 'expr'));
+        var expr = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          'var __expr#__ = "";                            '.replace('#', node.exprCnt) +
+          'if ( {list} && {list}.length ) {               '.replace(/\{list\}/g, list) +
+          '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'.replace('{list}', list).replace(/\{i\}/g, i) +
+          '    var {value} = {list}[{i}];                 '.replace('{list}', list).replace('{i}', i).replace('{value}', value) +
+          '    {expressions}                              '.replace('{expressions}', expr) +
+          '    __expr#__ += {source}                      '.replace('#', node.exprCnt).replace('{source}', source) +
+          '  }' +
+          '}'
+        );
       }
-    }
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '';
-      this.expressions.push(
-        'local __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
-      );
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '';
-      this.expressions.push(
-        'var __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
-      );
-    }
-    if (expressions) {
-      this.expressions.push(expressions);
-    }
-    if (source) {
-      this.expressions.push(source);
-    }
-    this.source.push(
-      '{name}(__params#__)                        '.replace('{name}', name).replace('#', node.exprCnt)
-    );
-    return;
-  case 'require':
-    closeScope(this, node);
-    var name;
-    if (node.attributes.name) {
+      return;
+    case 'switch':
+      closeScope(this, node);
+      var test = _getAttr(node, 'test', 'expr');
       if (this.lang === 'lua') {
-        name = '"templates.' + _getAttr(node, 'name') + '"';
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '';
+        this.expressions.push(
+          'local __expr#__ = ""\n                            \n'.replace('#', node.exprCnt) +
+          'local __test#__ = {test}\n                        \n'.replace('#', node.exprCnt).replace('{test}', test) +
+          '{expressions}\n                                   \n'.replace('{expressions}', expressions) +
+          '{source}\n                                        \n'.replace('{source}', source)
+        );
       } else {
-        name = '"' + _getAttr(node, 'name') + '-template"';
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '';
+        this.expressions.push(
+          'var __expr#__ = "";                              '.replace('#', node.exprCnt) +
+          'switch ({test}) {                                '.replace('{test}', test) +
+          '  {expressions}                                  '.replace('{expressions}', expressions) +
+          '  {source}                                       '.replace('{source}', source) +
+          '}'
+        );
       }
-    } else if (node.attributes.select) {
-      name = _getAttr(node, 'select', 'expr');
-    }
-    if (this.lang === 'lua') {
-      var expressions = node.innerExpressions.join('\n') || '';
-      var source = node.innerSource.join('..') || '';
-      this.expressions.push('local __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
-    } else {
-      var expressions = node.innerExpressions.join(';') || '';
-      var source = node.innerSource.join('+') || '';
-      this.expressions.push('var __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
-    }
+      return;
+    case 'case':
+      closeScope(this, node);
+      var val = _getAttr(node, 'is', 'expr');
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        var prevExpr = this.expressions.pop() || '';
+        var token;
+        if (prevExpr.slice(-4) === 'end\n') {
+          prevExpr = prevExpr.slice(0, -4);
+          token = 'elseif';
+        } else {
+          token = 'if';
+        }
+        this.expressions.push(
+          prevExpr +
+          '{token} __test#__ == {val} then\n      \n'.replace('{token}', token).replace('#', node.exprCnt).replace('{val}', val) +
+          '  {expressions}\n                  \n'.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          'end\n'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          (this.expressions.pop() || '') +
+          'case {val}:                        '.replace('{val}', val) +
+          '  {expressions}                    '.replace('{expressions}', expressions) +
+          '  __expr#__ = {source};                '.replace('#', node.exprCnt).replace('{source}', source) +
+          'break;'
+        );
+      }
+      return;
+    case 'default':
+      closeScope(this, node);
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        var prevExpr = this.expressions.pop() || '';
+        if (prevExpr.slice(-4) === 'end\n') {
+          prevExpr = prevExpr.slice(0, -4);
+        }
+        this.expressions.push(
+          prevExpr +
+          'else\n' +
+          '  {expressions}\n                   \n'.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}\n                \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          'end\n'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          (this.expressions.pop() || '') +
+          'default: ' +
+          '  {expressions}                        '.replace('{expressions}', expressions) +
+          '  __expr#__ = {source};                    '.replace('#', node.exprCnt).replace('{source}', source) +
+          'break;'
+        );
+      }
+      return;
 
-    if (expressions) {
-      this.expressions.push(expressions);
-    }
-    if (source) {
-      this.expressions.push(source);
-    }
-    this.source.push(
-      'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
-    );
-    break;
+    case 'if':
+      closeScope(this, node);
+      var test = _getAttr(node, 'test', 'expr');
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        this.expressions.push(
+          'local __expr#__ = ""\n                             \n'.replace('#', node.exprCnt) +
+          'if {test} then\n                               \n'.replace('{test}', test) +
+          '  {expressions}\n                              \n'.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          'end\n'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          'var __expr#__ = "";                                '.replace('#', node.exprCnt) +
+          'if ({test}) {                                  '.replace('{test}', test) +
+          '  {expressions}                                '.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}                             '.replace('#', node.exprCnt).replace('{source}', source) +
+          '}'
+        );
+      }
+      return;
+    case 'elseif':
+      closeScope(this, node);
+      var test = _getAttr(node, 'test', 'expr');
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        var prevExpr = this.expressions.pop() || '';
+        if (prevExpr.slice(-4) === 'end\n') {
+          prevExpr = prevExpr.slice(0, -4);
+        }
+        this.expressions.push(
+          prevExpr +
+          'elseif {test} then\n             \n'.replace('{test}', test) +
+          '  {expressions}\n                \n'.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}\n             \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          'end\n'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          (this.expressions.pop() || '') +
+          'else if ({test}) {               '.replace('{test}', test) +
+          '  {expressions}                  '.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}               '.replace('#', node.exprCnt).replace('{source}', source) +
+          '}'
+        );
+      }
+
+      return;
+    case 'else':
+      closeScope(this, node);
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        var prevExpr = this.expressions.pop() || '';
+        if (prevExpr.slice(-4) === 'end\n') {
+          prevExpr = prevExpr.slice(0, -4);
+        }
+        this.expressions.push(
+          prevExpr +
+          'else\n' +
+          '  {expressions}\n                      \n'.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
+          'end\n'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          (this.expressions.pop() || '') +
+          'else {' +
+          '  {expressions}                        '.replace('{expressions}', expressions) +
+          '  __expr#__ = {source}                 '.replace('#', node.exprCnt).replace('{source}', source) +
+          '}'
+        );
+      }
+      return;
+    case 'value':
+      if (node.attributes.escape) {
+        switch (node.attributes.escape.value) {
+          case 'html':
+          case 'js':
+          case 'json':
+            this.source.push(
+              (this.source.pop() || '') +
+              ')'
+            );
+            break;
+        }
+      }
+      return;
+    case 'set':
+      closeScope(this, node);
+      var name;
+      if (node.attributes.name) {
+        name = _getAttr(node, 'name');
+      } else if (node.attributes.select) {
+        name = _getAttr(node, 'select', 'expr');
+      }
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '""';
+        this.expressions.push(
+          'function {name} ({params})           '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
+          '  {expressions}                      '.replace('{expressions}', expressions) +
+          '  return {source}                    '.replace('{source}', source) +
+          'end'
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '""';
+        this.expressions.push(
+          'function {name} ({params}){          '.replace('{name}', name).replace('{params}', node.attributes.params ? node.attributes.params.value : 'params') +
+          '  {expressions}                      '.replace('{expressions}', expressions) +
+          '  return {source}                    '.replace('{source}', source) +
+          '}'
+        );
+      }
+      return;
+    case 'get':
+      closeScope(this, node);
+      var name;
+      if (node.attributes.name) {
+        name = _getAttr(node, 'name');
+      } else if (node.attributes.select) {
+        name = '__expr#__'.replace('#', node.exprCnt);
+        if (this.lang === 'lua') {
+          this.expressions.push('local ' + name + '=' + _getAttr(node, 'select', 'expr'));
+        } else {
+          this.expressions.push('var ' + name + '=' + _getAttr(node, 'select', 'expr'));
+        }
+      }
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '';
+        this.expressions.push(
+          'local __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
+        );
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '';
+        this.expressions.push(
+          'var __params#__ = {params}                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
+        );
+      }
+      if (expressions) {
+        this.expressions.push(expressions);
+      }
+      if (source) {
+        this.expressions.push(source);
+      }
+      this.source.push(
+        '{name}(__params#__)                        '.replace('{name}', name).replace('#', node.exprCnt)
+      );
+      return;
+    case 'require':
+      closeScope(this, node);
+      var name;
+      if (node.attributes.name) {
+        if (this.lang === 'lua') {
+          name = '"templates.' + _getAttr(node, 'name') + '"';
+        } else {
+          name = '"' + _getAttr(node, 'name') + '-template"';
+        }
+      } else if (node.attributes.select) {
+        name = '"templates."..' + _getAttr(node, 'select', 'expr');
+      }
+      if (this.lang === 'lua') {
+        var expressions = node.innerExpressions.join('\n') || '';
+        var source = node.innerSource.join('..') || '';
+        this.expressions.push('local __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
+      } else {
+        var expressions = node.innerExpressions.join(';') || '';
+        var source = node.innerSource.join('+') || '';
+        this.expressions.push('var __params#__ = {params};               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
+      }
+
+      if (expressions) {
+        this.expressions.push(expressions);
+      }
+      if (source) {
+        this.expressions.push(source);
+      }
+      this.source.push(
+        'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
+      );
+      break;
   }
 }
 
@@ -552,32 +552,31 @@ function onscript(text) {
 
 function ontext(text) {
   switch (this.stack[this.stack.length - 1]) {
-  case 'get':
-  case 'params':
-  case 'require':
-    if (this.lang === 'lua') {
-      this.expressions.push(
-        'U.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
-      );
-    } else {
-      this.expressions.push(
-        '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
-      );
-    }
-    break;
-  case 'value':
-    var tmpExpr = _getExpr(text);
-    if (this.lang === 'lua') {
-      tmpExpr = getLuaExpr(tmpExpr);
-    }
-    this.source.push(
-      //(this.source.pop() || '') +
-      getName(tmpExpr)
-    );
-    break;
-  default:
-    this.source.push('"' + escapeJS(text) + '"');
-    break;
+    case 'get':
+    case 'params':
+    case 'require':
+      if (this.lang === 'lua') {
+        this.expressions.push(
+          'U.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
+        );
+      } else {
+        this.expressions.push(
+          '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
+        );
+      }
+      break;
+    case 'value':
+      var tmpExpr = _getExpr(text);
+      if (this.lang === 'lua') {
+        tmpExpr = 'tostring(#)'.replace('#', getLuaExpr(tmpExpr));
+      } else {
+        tmpExpr = getName(tmpExpr);
+      }
+      this.source.push(tmpExpr);
+      break;
+    default:
+      this.source.push('"' + escapeJS(text) + '"');
+      break;
   }
 }
 
@@ -592,26 +591,26 @@ function onend() {
 
 function openScope(_this, node) {
   switch (node.local) {
-  case 'else':
-  case 'elseif':
-    node.exprCnt = _this.prevClosed.exprCnt;
-    break;
-  case 'case':
-  case 'default':
-    node.exprCnt = _this.parent.exprCnt;
-    break;
-  case 'if':
-  case 'for':
-  case 'switch':
-    node.exprCnt = _this.exprCnt;
-    _this.exprCnt++;
-    _this.source.push('__expr#__'.replace('#', node.exprCnt));
-    break;
-  case 'get':
-  case 'require':
-    node.exprCnt = _this.exprCnt;
-    _this.exprCnt++;
-    break;
+    case 'else':
+    case 'elseif':
+      node.exprCnt = _this.prevClosed.exprCnt;
+      break;
+    case 'case':
+    case 'default':
+      node.exprCnt = _this.parent.exprCnt;
+      break;
+    case 'if':
+    case 'for':
+    case 'switch':
+      node.exprCnt = _this.exprCnt;
+      _this.exprCnt++;
+      _this.source.push('__expr#__'.replace('#', node.exprCnt));
+      break;
+    case 'get':
+    case 'require':
+      node.exprCnt = _this.exprCnt;
+      _this.exprCnt++;
+      break;
   }
   node.expressions = _this.expressions;
   node.source = _this.source;
@@ -639,7 +638,7 @@ function getPrevClosed(_this, name) {
 }
 
 function getEval(compile_file, parser, filepath) {
-  return function (value) {
+  return function(value) {
     try {
       (new Function(value));
     } catch (e) {
@@ -650,7 +649,7 @@ function getEval(compile_file, parser, filepath) {
 }
 
 function getExpr(compile_file, parser, filepath) {
-  return function (value, where) {
+  return function(value, where) {
     try {
       value = value.replace(/;+\s*$/, '');
       (new Function('(' + value + ')'));
@@ -662,7 +661,7 @@ function getExpr(compile_file, parser, filepath) {
 }
 
 function getAttr(compile_file, parser, filepath) {
-  return function (node, attr, type) {
+  return function(node, attr, type) {
     var value;
     try {
       value = node.attributes[attr].value;
@@ -701,7 +700,7 @@ function compileAttributes(attrs, lang) {
       attrValue = attrs[i].value.replace(/{{/g, '__DOUBLE_LEFT_CURLY_BRACES__').replace(/}}/g, '__DOUBLE_RIGHT_CURLY_BRACES__');
 
       result.text += ' ' + i + '=\\"'
-      attrValue.match(/{[^}]*}|[^{}]*/g).forEach(function (str) {
+      attrValue.match(/{[^}]*}|[^{}]*/g).forEach(function(str) {
         if (str !== '') {
           if (str[0] === '{') {
             result.name[n] = i;
@@ -752,12 +751,12 @@ function errorMessage(msg, badLine, file, filepath) {
 
   var longest = num.sort(numSort)[num.length - 1].toString().length,
     minWhitespace = num.slice(0)
-      .map(function (n) {
+      .map(function(n) {
         return leftWhitespace(lines[n]);
       })
       .sort(numSort)[0];
 
-  num.forEach(function (n) {
+  num.forEach(function(n) {
     badPlace.push(
       ('%n%: ' + lines[n].slice(minWhitespace)).replace('%n%', zeroPadding(n + 1, longest))
     );
@@ -785,23 +784,23 @@ var short_tags = {
   wbr: true
 };
 
-var jschars = /[\\'"\/\n\r\t\b\f<>]/g;
-var htmlchars = /[&<>"]/g;
 
+//var jschars = /[\\'"\/\n\r\t\b\f<>]/g;
+var jschars = /['"\n\r\t\b\f]/g;
 var jshash = {
   '"': '\\"',
+  '\'': '\\\'',
   '\\': '\\\\',
-  '/': '\\/',
+  //'/': '\\/',
   '\n': '\\n',
   '\r': '\\r',
   '\t': '\\t',
   '\b': '\\b',
   '\f': '\\f',
-  '\'': '\\\'',
-  '<': '\\u003C',
-  '>': '\\u003E'
+  //'<': '\\u003C',
+  //'>': '\\u003E'
 };
-
+var htmlchars = /[&<>"]/g;
 var htmlhash = {
   '&': '&amp;',
   '<': '&lt;',
