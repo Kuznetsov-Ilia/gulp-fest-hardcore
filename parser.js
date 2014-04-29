@@ -197,6 +197,10 @@ function onopentag(node) {
       );
     }
     return;
+
+  case 'log':
+    this.expressions.push('console.log(');
+    return;
   }
 }
 
@@ -538,6 +542,9 @@ function onclosetag() {
       'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
     );
     break;
+  case 'log':
+    this.expressions.push(this.expressions.pop() + ')');
+    return;
   }
 }
 
@@ -573,6 +580,9 @@ function ontext(text) {
       tmpExpr = getName(tmpExpr);
     }
     this.source.push(tmpExpr);
+    break;
+  case 'log':
+    this.expressions.push(this.expressions.pop() + text);
     break;
   default:
     this.source.push('"' + escapeJS(text) + '"');
