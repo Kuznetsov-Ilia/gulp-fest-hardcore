@@ -543,7 +543,7 @@ function onclosetag() {
     );
     break;
   case 'log':
-    this.expressions.push(this.expressions.pop() + ')');
+    this.expressions.push(this.expressions.pop() + ');');
     return;
   }
 }
