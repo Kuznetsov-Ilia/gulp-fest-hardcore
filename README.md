@@ -400,7 +400,18 @@ require("name3")(__params3__);
 ```
 
 ### include
+выпилено
 ### insert
+Вставить файл напрямую в шаблон
+`src` - относителен к текущему файлу (его папке)
+```xml
+<style type="text/css">
+  <insert src="style.css"/>
+<style>
+<script>
+  <insert src="inline-script.js"/>
+</script>
+```
 
 # Примеры
 

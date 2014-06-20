@@ -35,7 +35,8 @@ Parser.prototype.write = function (xmlString, filepath) {
   _getEval = getEval(xmlString, this.parser, filepath);
   _getExpr = getExpr(xmlString, this.parser, filepath);
   _getAttr = getAttr(xmlString, this.parser, filepath);
-
+  this.parser.filepath = filepath;
+  //log(Object.keys(this.parser));
   this.parser.write(xmlString).close();
   return this;
 }
@@ -43,7 +44,7 @@ var _getEval, _getExpr, _getAttr;
 
 Parser.prototype.getSource = function () {
   var output;
-  if(this.parser.lang === 'lua') {
+  if (this.parser.lang === 'lua') {
     output = fs.readFileSync(__dirname + '/tmpl.lua').toString()
       .replace(/__VARS__/, this.parser.expressions.join('\n') || '')
       .replace(/__SOURCE__/, this.parser.source.join('..') || '""')
@@ -79,7 +80,7 @@ function onerror(e) {
 
 function onopentag(node) {
   this.stack.push(node.local);
-  if(nsTags.indexOf(node.local) === -1) {
+  if (nsTags.indexOf(node.local) === -1) {
     var attrs = compileAttributes(node.attributes, this.lang);
     //opentag = true;
     this.source.push(
@@ -94,7 +95,7 @@ function onopentag(node) {
   }
 
 
-  switch(node.local) {
+  switch (node.local) {
   case 'doctype':
     this.source.push('"<!DOCTYPE "');
     return;
@@ -123,17 +124,17 @@ function onopentag(node) {
     openScope(this, node);
     return;
   case 'value':
-    if(node.attributes.escape) {
-      switch(node.attributes.escape.value) {
+    if (node.attributes.escape) {
+      switch (node.attributes.escape.value) {
       case 'html':
-        if(this.lang === 'lua') {
+        if (this.lang === 'lua') {
           this.source.push('U.escapeHTML(""');
         } else {
           this.source.push('$.escapeHTML(""');
         }
         break;
       case 'js':
-        if(this.lang === 'lua') {
+        if (this.lang === 'lua') {
           this.source.push('U.escapeJS(""');
         } else {
           this.source.push('$.escapeJS(""');
@@ -141,7 +142,7 @@ function onopentag(node) {
         break;
       case 'json':
         log('escape json is not implemented');
-        if(this.lang === 'lua') {
+        if (this.lang === 'lua') {
           this.source.push('U.escapeJSON(""');
         } else {
           this.source.push('$.escapeJSON(""');
@@ -151,14 +152,22 @@ function onopentag(node) {
     }
     return;
   case 'insert':
+    if (node.attributes.src) {
+      var path = [dirname(this.filepath), '/', _getAttr(node, 'src')].join('');
+      var content = escapeJS(fs.readFileSync(path).toString());
+      this.source.push([this.source.pop(), '"', content, '"'].join(''));
+    } else {
+      log('insert must have src attribute');
+    }
+    return;
   case 'include':
   case 'var':
     log(node.local, 'isnot implemented');
     return;
   case 'vars':
     var vars = [];
-    for(var i in node.attributes) {
-      if(node.attributes[i].value === '') {
+    for (var i in node.attributes) {
+      if (node.attributes[i].value === '') {
         vars.push(node.attributes[i].value)
       } else {
         vars.push('{name}={value}'
@@ -167,7 +176,7 @@ function onopentag(node) {
         );
       }
     }
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       this.expressions.push('local {vars};'
         .replace('{vars}', vars.join(','))
       );
@@ -179,13 +188,13 @@ function onopentag(node) {
     return;
   case 'param':
     var value = '';
-    if(node.attributes.value) {
+    if (node.attributes.value) {
       value = _getAttr(node, 'value', 'var');
-    } else if(node.attributes.select) {
+    } else if (node.attributes.select) {
       value = '(' + _getAttr(node, 'select', 'expr') + ')';
     }
 
-    if(value) {
+    if (value) {
       this.source.push(
         (this.source.pop() || '') +
         '__params#__.{name} = {value};'.replace('#', this.parent.exprCnt).replace('{name}', node.attributes.name.value).replace('{value}', value)
@@ -210,16 +219,16 @@ function onclosetag() {
   //opentag = closetag(node.local, opentag);
 
   this.stack.pop();
-  if(nsTags.indexOf(node.local) === -1) {
+  if (nsTags.indexOf(node.local) === -1) {
     this.stack.pop();
-    if(!(node.name in short_tags)) {
+    if (!(node.name in short_tags)) {
       this.source.push('"</#>"'.replace('#', node.name));
     }
     return;
   } else {
     this.fstack.pop();
   }
-  switch(node.local) {
+  switch (node.local) {
   case 'doctype':
     this.source.push('">"');
     return;
@@ -234,7 +243,7 @@ function onclosetag() {
     var list = _getAttr(node, 'iterate', 'expr');
     var i = _getAttr(node, 'index', 'var');
     var value = _getAttr(node, 'value');
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expr = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
@@ -266,7 +275,7 @@ function onclosetag() {
   case 'switch':
     closeScope(this, node);
     var test = _getAttr(node, 'test', 'expr');
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
       this.expressions.push(
@@ -290,12 +299,12 @@ function onclosetag() {
   case 'case':
     closeScope(this, node);
     var val = _getAttr(node, 'is', 'expr');
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
       var token;
-      if(prevExpr.slice(-4) === 'end\n') {
+      if (prevExpr.slice(-4) === 'end\n') {
         prevExpr = prevExpr.slice(0, -4);
         token = 'elseif';
       } else {
@@ -322,11 +331,11 @@ function onclosetag() {
     return;
   case 'default':
     closeScope(this, node);
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
-      if(prevExpr.slice(-4) === 'end\n') {
+      if (prevExpr.slice(-4) === 'end\n') {
         prevExpr = prevExpr.slice(0, -4);
       }
       this.expressions.push(
@@ -352,7 +361,7 @@ function onclosetag() {
   case 'if':
     closeScope(this, node);
     var test = _getAttr(node, 'test', 'expr');
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
@@ -377,11 +386,11 @@ function onclosetag() {
   case 'elseif':
     closeScope(this, node);
     var test = _getAttr(node, 'test', 'expr');
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
-      if(prevExpr.slice(-4) === 'end\n') {
+      if (prevExpr.slice(-4) === 'end\n') {
         prevExpr = prevExpr.slice(0, -4);
       }
       this.expressions.push(
@@ -406,11 +415,11 @@ function onclosetag() {
     return;
   case 'else':
     closeScope(this, node);
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       var prevExpr = this.expressions.pop() || '';
-      if(prevExpr.slice(-4) === 'end\n') {
+      if (prevExpr.slice(-4) === 'end\n') {
         prevExpr = prevExpr.slice(0, -4);
       }
       this.expressions.push(
@@ -433,8 +442,8 @@ function onclosetag() {
     }
     return;
   case 'value':
-    if(node.attributes.escape) {
-      switch(node.attributes.escape.value) {
+    if (node.attributes.escape) {
+      switch (node.attributes.escape.value) {
       case 'html':
       case 'js':
       case 'json':
@@ -449,12 +458,12 @@ function onclosetag() {
   case 'set':
     closeScope(this, node);
     var name;
-    if(node.attributes.name) {
+    if (node.attributes.name) {
       name = _getAttr(node, 'name');
-    } else if(node.attributes.select) {
+    } else if (node.attributes.select) {
       name = _getAttr(node, 'select', 'expr');
     }
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
@@ -477,17 +486,17 @@ function onclosetag() {
   case 'get':
     closeScope(this, node);
     var name;
-    if(node.attributes.name) {
+    if (node.attributes.name) {
       name = _getAttr(node, 'name');
-    } else if(node.attributes.select) {
+    } else if (node.attributes.select) {
       name = '__expr#__'.replace('#', node.exprCnt);
-      if(this.lang === 'lua') {
+      if (this.lang === 'lua') {
         this.expressions.push('local ' + name + '=' + _getAttr(node, 'select', 'expr'));
       } else {
         this.expressions.push('var ' + name + '=' + _getAttr(node, 'select', 'expr'));
       }
     }
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
       this.expressions.push(
@@ -500,10 +509,10 @@ function onclosetag() {
         'var __params#__ = {params};                 '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}')
       );
     }
-    if(expressions) {
+    if (expressions) {
       this.expressions.push(expressions);
     }
-    if(source) {
+    if (source) {
       this.expressions.push(source);
     }
     this.source.push(
@@ -513,16 +522,20 @@ function onclosetag() {
   case 'require':
     closeScope(this, node);
     var name;
-    if(node.attributes.name) {
-      if(this.lang === 'lua') {
+    if (node.attributes.name) {
+      if (this.lang === 'lua') {
         name = '"templates.' + _getAttr(node, 'name') + '"';
       } else {
         name = '"' + _getAttr(node, 'name') + '-template"';
       }
-    } else if(node.attributes.select) {
-      name = '"templates."..' + _getAttr(node, 'select', 'expr');
+    } else if (node.attributes.select) {
+      if (this.lang === 'lua') {
+        name = '"templates."..' + _getAttr(node, 'select', 'expr');
+      } else {
+        name = '"' + _getAttr(node, 'select', 'expr') + '-template"';
+      }
     }
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
       this.expressions.push('local __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
@@ -532,10 +545,10 @@ function onclosetag() {
       this.expressions.push('var __params#__ = {params};               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
     }
 
-    if(expressions) {
+    if (expressions) {
       this.expressions.push(expressions);
     }
-    if(source) {
+    if (source) {
       this.expressions.push(source);
     }
     this.source.push(
@@ -558,11 +571,11 @@ function onscript(text) {
 }
 
 function ontext(text) {
-  switch(this.stack[this.stack.length - 1]) {
+  switch (this.stack[this.stack.length - 1]) {
   case 'get':
   case 'params':
   case 'require':
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       this.expressions.push(
         'U.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
       );
@@ -574,7 +587,7 @@ function ontext(text) {
     break;
   case 'value':
     var tmpExpr = _getExpr(text);
-    if(this.lang === 'lua') {
+    if (this.lang === 'lua') {
       tmpExpr = 'tostring(#)'.replace('#', getLuaExpr(tmpExpr));
     } else {
       tmpExpr = getName(tmpExpr);
@@ -600,7 +613,7 @@ function onend() {
 
 
 function openScope(_this, node) {
-  switch(node.local) {
+  switch (node.local) {
   case 'else':
   case 'elseif':
     node.exprCnt = _this.prevClosed.exprCnt;
@@ -641,7 +654,7 @@ function closeScope(_this, node) {
 }
 
 function getPrevClosed(_this, name) {
-  while(_this.name === name) {
+  while (_this.name === name) {
     _this = _this.prevClosed;
   }
   return _this;
@@ -651,7 +664,7 @@ function getEval(compile_file, parser, filepath) {
   return function (value) {
     try {
       (new Function(value));
-    } catch(e) {
+    } catch (e) {
       throw new Error(errorMessage('node has ' + e, parser.line, compile_file, filepath));
     }
     return value;
@@ -663,7 +676,7 @@ function getExpr(compile_file, parser, filepath) {
     try {
       value = value.replace(/;+\s*$/, '');
       (new Function('(' + value + ')'));
-    } catch(e) {
+    } catch (e) {
       throw new Error(errorMessage((where || 'node') + ' has ' + e, parser.line, compile_file, filepath));
     }
     return value;
@@ -675,21 +688,21 @@ function getAttr(compile_file, parser, filepath) {
     var value;
     try {
       value = node.attributes[attr].value;
-    } catch(e) {
+    } catch (e) {
       throw new Error(errorMessage('attribute "' + attr + '" is missing', parser.line, compile_file, filepath));
     }
-    if(type === 'expr') {
+    if (type === 'expr') {
       try {
         (new Function('(' + value + ')'));
-      } catch(e) {
+      } catch (e) {
         throw new Error(errorMessage('attribute "' + attr + '" has ' + e, parser.line, compile_file, filepath));
       }
-    } else if(type === 'var') {
-      if(!reName.test(value)) {
+    } else if (type === 'var') {
+      if (!reName.test(value)) {
         throw new Error(errorMessage('attribute "' + attr + '" has an invalid identifier', parser.line, compile_file, filepath));
       }
     }
-    if(node.lang === 'lua') {
+    if (node.lang === 'lua') {
       value = getLuaExpr(value);
     }
     return value;
@@ -703,19 +716,19 @@ function compileAttributes(attrs, lang) {
       'name': []
     }, n = 0,
     attrValue = '';
-  for(i in attrs) {
-    if(i.slice(-3) === '-if') {
+  for (i in attrs) {
+    if (i.slice(-3) === '-if') {
       result.text += ' " + ((' + attrs[i].value + ') ? "' + i.slice(0, -3) + '": "") +"';
     } else {
       attrValue = attrs[i].value.replace(/{{/g, '__DOUBLE_LEFT_CURLY_BRACES__').replace(/}}/g, '__DOUBLE_RIGHT_CURLY_BRACES__');
 
       result.text += ' ' + i + '=\\"'
       attrValue.match(/{[^}]*}|[^{}]*/g).forEach(function (str) {
-        if(str !== '') {
-          if(str[0] === '{') {
+        if (str !== '') {
+          if (str[0] === '{') {
             result.name[n] = i;
             result.expr[n] = str.slice(1, -1).replace(/__DOUBLE_LEFT_CURLY_BRACES__/g, '{').replace(/__DOUBLE_RIGHT_CURLY_BRACES__/g, '}');
-            if(lang === 'lua') {
+            if (lang === 'lua') {
               result.text += '".. U.escapeHTML(' + getLuaExpr(result.expr[n]) + ') .."';
             } else {
               result.text += '"+$.escapeHTML(' + result.expr[n] + ')+"';
@@ -733,7 +746,7 @@ function compileAttributes(attrs, lang) {
 
 function errorMessage(msg, badLine, file, filepath) {
   function zeroPadding(s, len) {
-    if(s.toString().length >= len) {
+    if (s.toString().length >= len) {
       return s + '';
     }
     return String(new Array(len + 1).join('0') + s).slice(-len);
@@ -753,8 +766,8 @@ function errorMessage(msg, badLine, file, filepath) {
     badPlace = [],
     num = [];
 
-  for(var i = badLine - before; i <= badLine + after; i++) {
-    if(lines[i] !== undefined) {
+  for (var i = badLine - before; i <= badLine + after; i++) {
+    if (lines[i] !== undefined) {
       num.push(i);
     }
   }
@@ -822,13 +835,16 @@ var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null
 var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log'.split(',');
 
 function getName(name) {
-  if(/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
+  if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
     return name;
   } else {
     return '(' + name + ')';
   }
 }
 
+function dirname(path) {
+  return path.substring(0, path.lastIndexOf('/'));
+};
 /* LUA */
 
 function getLuaExpr(val) {
@@ -837,7 +853,7 @@ function getLuaExpr(val) {
     .replace(/\|\|/g, ' or ')
     .replace(/\!/g, ' not ');
 
-  if(val.indexOf('?') === -1) {
+  if (val.indexOf('?') === -1) {
     val = val.replace(/\:/g, '='); // object notation
   } else {
     val = val.replace(/\:/g, ' or '); // ternar operator
