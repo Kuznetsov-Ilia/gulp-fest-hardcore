@@ -155,7 +155,7 @@ function onopentag(node) {
     if (node.attributes.src) {
       var path = [dirname(this.filepath), '/', _getAttr(node, 'src')].join('');
       var content = escapeJS(fs.readFileSync(path).toString());
-      this.source.push([this.source.pop(), '"', content, '"'].join(''));
+      this.source.push('"' + content + '"');
     } else {
       log('insert must have src attribute');
     }
