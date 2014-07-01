@@ -371,6 +371,37 @@ require("name3")(__params3__);
 </switch>
 ```
 
+Если нужно 
+```javascript
+switch (z) {
+  case 'a':
+  case 'b':
+  case 'c':
+    domagick;
+  break;
+  case 'd':
+    doD;
+  break;
+  default:
+    'docommon'
+}
+```
+пользуй аттрибут `any` и сепаратор значений `|`
+не нужен `break`? пользуй аттрибут `nobreak` 
+```xml
+<switch test="z">
+  <case any="'a' | 'b' | 'c'">
+    <value>domagick</value>
+  </case>
+  <case is="'c'">
+    <value>doD</value>
+  </case>
+  <default nobreak="1">
+    docommon
+  </default>
+</switch>
+```
+
 ## Остальные конструкции
 
 ### cdata
@@ -412,6 +443,11 @@ require("name3")(__params3__);
   <insert src="inline-script.js"/>
 </script>
 ```
+
+### continue
+### break
+### return
+вставляют в текущий стек выражений соответствующую конструкцию
 
 # Примеры
 

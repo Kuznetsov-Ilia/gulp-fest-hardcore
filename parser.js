@@ -161,8 +161,10 @@ function onopentag(node) {
     }
     return;
   case 'include':
+    log('include isnot implemented. use insert or get or require, Luke');
+    return;
   case 'var':
-    log(node.local, 'isnot implemented');
+    log('var isnot implemented. use vars, Luke');
     return;
   case 'vars':
     var vars = [];
@@ -207,6 +209,11 @@ function onopentag(node) {
     }
     return;
 
+  case 'continue':
+  case 'break':
+  case 'return':
+    this.expressions.push(node.local + ';\n');
+  return;
   case 'log':
     this.expressions.push('console.log(');
     return;
@@ -298,7 +305,12 @@ function onclosetag() {
     return;
   case 'case':
     closeScope(this, node);
-    var val = _getAttr(node, 'is', 'expr');
+    if (node.attributes.is) {
+      var val = _getAttr(node, 'is', 'expr');
+    } else if (node.attributes.any) {
+      var vals = _getAttr(node, 'any').split('|');
+    }
+    var nobreak = node.attributes.nobreak;
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
@@ -318,14 +330,24 @@ function onclosetag() {
         'end\n'
       );
     } else {
+      var _case = '';
+      if (node.attributes.is) {
+        _case = 'case ' + val + ':';
+      } else if (node.attributes.any) {
+        var cases = [];
+        vals.forEach(function(val) {
+          cases.push('case ' + val + ':');
+        });
+        _case = cases.join('\n');
+      }
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
       this.expressions.push(
         (this.expressions.pop() || '') +
-        'case {val}:                        '.replace('{val}', val) +
+        '#case                              '.replace('#case', _case) +
         '  {expressions}                    '.replace('{expressions}', expressions) +
-        '  __expr#__ = {source};                '.replace('#', node.exprCnt).replace('{source}', source) +
-        'break;'
+        '  __expr#__ = {source};            '.replace('#', node.exprCnt).replace('{source}', source) +
+        'break;                             '.replace('break', nobreak ? '' : 'break')
       );
     }
     return;
@@ -832,7 +854,7 @@ var htmlhash = {
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
-var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log'.split(',');
+var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break'.split(',');
 
 function getName(name) {
   if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
