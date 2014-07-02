@@ -49,6 +49,8 @@ Parser.prototype.getSource = function () {
       .replace(/__VARS__/, this.parser.expressions.join('\n') || '')
       .replace(/__SOURCE__/, this.parser.source.join('..') || '""')
       .replace(/"\.\."/g, '');
+  } else if (this.parser.lang == 'Xslate') {
+    output = this.parser.source.join('\n');
   } else {
     output = fs.readFileSync(__dirname + '/tmpl.js').toString()
       .replace(/__VARS__/, this.parser.expressions.join(';') || '')
@@ -83,12 +85,21 @@ function onopentag(node) {
   if (nsTags.indexOf(node.local) === -1) {
     var attrs = compileAttributes(node.attributes, this.lang);
     //opentag = true;
-    this.source.push(
-      '"<{name}{attrs}{selfclosed}>"'
-      .replace('{name}', node.name)
-      .replace('{attrs}', attrs.text)
-      .replace('{selfclosed}', node.isSelfClosing ? '/' : '')
-    );
+    if (this.lang == 'Xslate') {
+      this.source.push(
+        '<{name}{attrs}{selfclosed}>'
+        .replace('{name}', node.name)
+        .replace('{attrs}', attrs.text)
+        .replace('{selfclosed}', node.isSelfClosing ? '/' : '')
+      );
+    } else {
+      this.source.push(
+        '"<{name}{attrs}{selfclosed}>"'
+        .replace('{name}', node.name)
+        .replace('{attrs}', attrs.text)
+        .replace('{selfclosed}', node.isSelfClosing ? '/' : '')
+      );
+    }
     return;
   } else {
     this.fstack.push(node);
@@ -97,19 +108,39 @@ function onopentag(node) {
 
   switch (node.local) {
   case 'doctype':
-    this.source.push('"<!DOCTYPE "');
+    if (this.lang == 'Xslate') {
+      this.source.push('<!DOCTYPE ');
+    } else {
+      this.source.push('"<!DOCTYPE "');
+    }
     return;
   case 'comment':
-    this.source.push('"<!--"');
+    if (this.lang == 'Xslate') {
+      this.source.push('<!--');
+    } else {
+      this.source.push('"<!--"');
+    }
     return;
   case 'cdata':
-    this.source.push('"<![CDATA["');
+    if (this.lang == 'Xslate') {
+      this.source.push('<![CDATA[');
+    } else {
+      this.source.push('"<![CDATA["');
+    }
     return;
   case 'n':
-    this.source.push('"\n"');
+    if (this.lang == 'Xslate') {
+      this.source.push('\n');
+    } else {
+      this.source.push('"\n"');
+    }
     return;
   case 'space':
-    this.source.push('" "');
+    if (this.lang == 'Xslate') {
+      this.source.push(' ');
+    } else {
+      this.source.push('" "');
+    }
     return;
   case 'switch':
   case 'case':
@@ -124,30 +155,34 @@ function onopentag(node) {
     openScope(this, node);
     return;
   case 'value':
-    if (node.attributes.escape) {
-      switch (node.attributes.escape.value) {
-      case 'html':
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeHTML(""');
-        } else {
-          this.source.push('$.escapeHTML(""');
+    if (this.lang == 'Xslate') {
+      this.source.push('<: ');
+    } else {
+      if (node.attributes.escape) {
+        switch (node.attributes.escape.value) {
+        case 'html':
+          if (this.lang === 'lua') {
+            this.source.push('U.escapeHTML(""');
+          } else {
+            this.source.push('$.escapeHTML(""');
+          }
+          break;
+        case 'js':
+          if (this.lang === 'lua') {
+            this.source.push('U.escapeJS(""');
+          } else {
+            this.source.push('$.escapeJS(""');
+          }
+          break;
+        case 'json':
+          log('escape json is not implemented');
+          if (this.lang === 'lua') {
+            this.source.push('U.escapeJSON(""');
+          } else {
+            this.source.push('$.escapeJSON(""');
+          }
+          break;
         }
-        break;
-      case 'js':
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeJS(""');
-        } else {
-          this.source.push('$.escapeJS(""');
-        }
-        break;
-      case 'json':
-        log('escape json is not implemented');
-        if (this.lang === 'lua') {
-          this.source.push('U.escapeJSON(""');
-        } else {
-          this.source.push('$.escapeJSON(""');
-        }
-        break;
       }
     }
     return;
@@ -181,6 +216,10 @@ function onopentag(node) {
     if (this.lang === 'lua') {
       this.expressions.push('local {vars};'
         .replace('{vars}', vars.join(','))
+      );
+    } else if (this.lang == 'Xslate') {
+      this.source.push(
+        '<:my {vars} :>'.replace('{vars}', vars.join(','))
       );
     } else {
       this.expressions.push('var {vars};'
@@ -229,7 +268,11 @@ function onclosetag() {
   if (nsTags.indexOf(node.local) === -1) {
     this.stack.pop();
     if (!(node.name in short_tags)) {
-      this.source.push('"</#>"'.replace('#', node.name));
+      if (this.lang == 'Xslate') {
+        this.source.push('</#>'.replace('#', node.name));
+      } else {
+        this.source.push('"</#>"'.replace('#', node.name));
+      }
     }
     return;
   } else {
@@ -237,13 +280,25 @@ function onclosetag() {
   }
   switch (node.local) {
   case 'doctype':
-    this.source.push('">"');
+    if (this.lang == 'Xslate') {
+      this.source.push('>');
+    } else {
+      this.source.push('">"');
+    }
     return;
   case 'comment':
-    this.source.push('"-->"');
+    if (this.lang == 'Xslate') {
+      this.source.push('-->');
+    } else {
+      this.source.push('"-->"');
+    }
     return;
   case 'cdata':
-    this.source.push('"]]>"');
+    if (this.lang == 'Xslate') {
+      this.source.push(']]>');
+    } else {
+      this.source.push('"]]>"');
+    }
     return;
   case 'for':
     closeScope(this, node);
@@ -263,6 +318,13 @@ function onclosetag() {
         '  end\n' +
         '  __expr#__ = table.concat(__expr#__)\n        \n'.replace(/#/g, node.exprCnt) +
         'end\n'
+      );
+    } else if (this.lang == 'Xslate') {
+      var source = node.innerSource.join('\n') || '';
+      this.source.push(
+        '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
+        source +
+        '<: }:>'
       );
     } else {
       var expr = node.innerExpressions.join(';') || '';
@@ -291,6 +353,8 @@ function onclosetag() {
         '{expressions}\n                                   \n'.replace('{expressions}', expressions) +
         '{source}\n                                        \n'.replace('{source}', source)
       );
+    } else if (this.lang === 'Xslate') {
+      
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '';
@@ -329,6 +393,8 @@ function onclosetag() {
         '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
+    } else if (this.lang === 'Xslate') {
+
     } else {
       var _case = '';
       if (node.attributes.is) {
@@ -367,6 +433,7 @@ function onclosetag() {
         '  __expr#__ = {source}\n                \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
+    } else if (this.lang == 'Xslate') {
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
@@ -393,13 +460,20 @@ function onclosetag() {
         '  __expr#__ = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
+    } else if (this.lang == 'Xslate') {
+      var source = node.innerSource.join('\n') || '';
+      this.source.push(
+        '<: if ${test} {:>                               '.replace('{test}', test) +
+        source +
+        '<: }:>'
+      );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
       this.expressions.push(
         'var __expr#__ = "";                                '.replace('#', node.exprCnt) +
-        'if ({test}) {                                  '.replace('{test}', test) +
-        '  {expressions}                                '.replace('{expressions}', expressions) +
+        'if ({test}) {                                      '.replace('{test}', test) +
+        '  {expressions}                                    '.replace('{expressions}', expressions) +
         '  __expr#__ = {source}                             '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
@@ -417,18 +491,26 @@ function onclosetag() {
       }
       this.expressions.push(
         prevExpr +
-        'elseif {test} then\n             \n'.replace('{test}', test) +
-        '  {expressions}\n                \n'.replace('{expressions}', expressions) +
+        'elseif {test} then\n                 \n'.replace('{test}', test) +
+        '  {expressions}\n                    \n'.replace('{expressions}', expressions) +
         '  __expr#__ = {source}\n             \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
+      );
+    } else if (this.lang == 'Xslate') {
+      var source = node.innerSource.join('\n') || '';
+      this.source.push(
+        (this.source.pop() || '') +
+        '<: else if ${test} {:>                 '.replace('{test}', test) +
+        '    {source}                           '.replace('{source}', source) +
+        '<: }:>'
       );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
       this.expressions.push(
         (this.expressions.pop() || '') +
-        'else if ({test}) {               '.replace('{test}', test) +
-        '  {expressions}                  '.replace('{expressions}', expressions) +
+        'else if ({test}) {                   '.replace('{test}', test) +
+        '  {expressions}                      '.replace('{expressions}', expressions) +
         '  __expr#__ = {source}               '.replace('#', node.exprCnt).replace('{source}', source) +
         '}'
       );
@@ -451,6 +533,14 @@ function onclosetag() {
         '  __expr#__ = {source}\n               \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
+    } else if (this.lang == 'Xslate') {
+      var source = node.innerSource.join('\n') || '';
+      this.source.push(
+        (this.source.pop() || '') +
+        '<: else {:>' +
+             source +
+        '<: }:>'
+      );
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
@@ -464,16 +554,20 @@ function onclosetag() {
     }
     return;
   case 'value':
-    if (node.attributes.escape) {
-      switch (node.attributes.escape.value) {
-      case 'html':
-      case 'js':
-      case 'json':
-        this.source.push(
-          (this.source.pop() || '') +
-          ')'
-        );
-        break;
+    if (this.lang == 'Xslate') {
+      this.source.push((this.source.pop() || '') + ' :>');
+    } else {
+      if (node.attributes.escape) {
+        switch (node.attributes.escape.value) {
+        case 'html':
+        case 'js':
+        case 'json':
+          this.source.push(
+            (this.source.pop() || '') +
+            ')'
+          );
+          break;
+        }
       }
     }
     return;
@@ -547,12 +641,16 @@ function onclosetag() {
     if (node.attributes.name) {
       if (this.lang === 'lua') {
         name = '"templates.' + _getAttr(node, 'name') + '"';
+      } else if (this.lang == 'Xslate') {
+        name = _getAttr(node, 'name');
       } else {
         name = '"' + _getAttr(node, 'name') + '-template"';
       }
     } else if (node.attributes.select) {
       if (this.lang === 'lua') {
         name = '"templates."..' + _getAttr(node, 'select', 'expr');
+      } else if (this.lang == 'Xslate') {
+        name = _getAttr(node, 'select', 'expr');
       } else {
         name = '"' + _getAttr(node, 'select', 'expr') + '-template"';
       }
@@ -561,21 +659,26 @@ function onclosetag() {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '';
       this.expressions.push('local __params#__ = {params}               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
+    } else if (this.lang == 'Xslate') {
+
     } else {
       var expressions = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '';
       this.expressions.push('var __params#__ = {params};               '.replace('#', node.exprCnt).replace('{params}', node.attributes.params ? _getAttr(node, 'params') : '{}'))
     }
-
     if (expressions) {
       this.expressions.push(expressions);
     }
     if (source) {
       this.expressions.push(source);
     }
-    this.source.push(
-      'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
-    );
+    if (this.lang == 'Xslate') {
+      this.source.push('<: include inc::{name} -> {} :>'.replace('{name}', name));
+    } else {
+      this.source.push(
+        'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
+      );
+    }
     break;
   case 'log':
     this.expressions.push(this.expressions.pop() + ');');
@@ -601,6 +704,8 @@ function ontext(text) {
       this.expressions.push(
         'U.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
       );
+    } else if (this.lang == 'Xslate') {
+
     } else {
       this.expressions.push(
         '$.extend(__params#__, {params})              '.replace('#', this.parent.exprCnt).replace('{params}', text)
@@ -614,13 +719,21 @@ function ontext(text) {
     } else {
       tmpExpr = getName(tmpExpr);
     }
-    this.source.push(tmpExpr);
+    if (this.lang == 'Xslate') {
+      this.source.push((this.source.pop() || '') + '$' + tmpExpr);
+    } else {
+      this.source.push(tmpExpr);
+    }
     break;
   case 'log':
     this.expressions.push(this.expressions.pop() + text);
     break;
   default:
-    this.source.push('"' + escapeJS(text) + '"');
+    if (this.lang == 'Xslate') {
+      this.source.push(escapeJS(text));
+    } else {
+      this.source.push('"' + escapeJS(text) + '"');
+    }
     break;
   }
 }
@@ -649,7 +762,9 @@ function openScope(_this, node) {
   case 'switch':
     node.exprCnt = _this.exprCnt;
     _this.exprCnt++;
-    _this.source.push('__expr#__'.replace('#', node.exprCnt));
+    if (_this.lang != 'Xslate') {
+      _this.source.push('__expr#__'.replace('#', node.exprCnt));
+    }
     break;
   case 'get':
   case 'require':
@@ -744,7 +859,11 @@ function compileAttributes(attrs, lang) {
     } else {
       attrValue = attrs[i].value.replace(/{{/g, '__DOUBLE_LEFT_CURLY_BRACES__').replace(/}}/g, '__DOUBLE_RIGHT_CURLY_BRACES__');
 
-      result.text += ' ' + i + '=\\"'
+      if (lang == 'Xslate') {
+        result.text += ' ' + i + '="'
+      } else {
+        result.text += ' ' + i + '=\\"'
+      }
       attrValue.match(/{[^}]*}|[^{}]*/g).forEach(function (str) {
         if (str !== '') {
           if (str[0] === '{') {
@@ -752,6 +871,8 @@ function compileAttributes(attrs, lang) {
             result.expr[n] = str.slice(1, -1).replace(/__DOUBLE_LEFT_CURLY_BRACES__/g, '{').replace(/__DOUBLE_RIGHT_CURLY_BRACES__/g, '}');
             if (lang === 'lua') {
               result.text += '".. U.escapeHTML(' + getLuaExpr(result.expr[n]) + ') .."';
+            } else if (lang == 'Xslate') {
+              result.text += '<:$' + result.expr[n] + ':>';
             } else {
               result.text += '"+$.escapeHTML(' + result.expr[n] + ')+"';
             }
@@ -760,8 +881,15 @@ function compileAttributes(attrs, lang) {
           }
         }
       });
-      result.text += '\\"';
+      if (lang == 'Xslate') {
+        result.text += '"';
+      } else {
+        result.text += '\\"';
+      }
     }
+  }
+  if (lang == 'Xslate') {
+    result.text = result.text.replace(/&amp;/g, '&');
   }
   return result;
 }
