@@ -4,7 +4,7 @@ var fs = require('fs');
 
 module.exports = Parser;
 
-function Parser(lang) {
+function Parser(lang, defaults) {
   var parser = sax.parser(false, {
     trim: true,
     xmlns: true,
@@ -29,6 +29,9 @@ function Parser(lang) {
   parser.lang = lang || 'js';
 
   this.parser = parser;
+  this.parser.defaults = extend({
+    requireNamespace: 'blocks'
+  }, defaults);
 }
 
 Parser.prototype.write = function (xmlString, filepath) {
@@ -50,7 +53,7 @@ Parser.prototype.getSource = function () {
       .replace(/__SOURCE__/, this.parser.source.join('..') || '""')
       .replace(/"\.\."/g, '');
   } else if (this.parser.lang == 'Xslate') {
-    output = this.parser.source.join('\n');
+    output = this.parser.source.join('').replace(/:><:/g, '\n');;
   } else {
     output = fs.readFileSync(__dirname + '/tmpl.js').toString()
       .replace(/__VARS__/, this.parser.expressions.join(';') || '')
@@ -248,6 +251,11 @@ function onopentag(node) {
     }
     return;
 
+  case 'template':
+    if (node.attributes.context_name) {
+      this.expressions.push('var {name} = params'.replace('{name}', _getAttr(node, 'context_name')));
+    }
+  return;
   case 'continue':
   case 'break':
   case 'return':
@@ -320,10 +328,14 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('\n') || '';
+      var source = node.innerSource.join('') || '';
       this.source.push(
         '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
-        source +
+          '<: my ${index} = $~{value} :>'.replace('{index}', i).replace('{value}', value) +
+        //'<: for ${list}.kv() -> $pair{key} {:>'.replace('{list}', list).replace('{key}', i) +
+          //  '<: my ${index} = $pair{key}.key; :>'.replace('{index}', i).replace('{key}', i) +
+           // '<: my ${value} = $pair{key}.value; :>'.replace('{value}', value).replace('{key}', i) +
+            source +
         '<: }:>'
       );
     } else {
@@ -449,7 +461,13 @@ function onclosetag() {
 
   case 'if':
     closeScope(this, node);
-    var test = _getAttr(node, 'test', 'expr');
+    var test, not = false;
+    if (node.attributes.test) {
+      test = _getAttr(node, 'test', 'expr');
+    } else if (node.attributes.not) {
+      test = _getAttr(node, 'not', 'expr');
+      not = true;
+    }
     if (this.lang === 'lua') {
       var expressions = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
@@ -461,10 +479,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('\n') || '';
+      var source = node.innerSource.join('') || '';
       this.source.push(
-        '<: if ${test} {:>                               '.replace('{test}', test) +
-        source +
+        '<: if ({not}${test}) {:>'                          .replace('{not}', not ? '!' : '')
+                                                          .replace('{test}', test) +
+            source +
         '<: }:>'
       );
     } else {
@@ -497,11 +516,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('\n') || '';
+      var source = node.innerSource.join('') || '';
       this.source.push(
-        (this.source.pop() || '') +
-        '<: else if ${test} {:>                 '.replace('{test}', test) +
-        '    {source}                           '.replace('{source}', source) +
+        (this.source.pop().slice(0, -2) || '') +
+        ' else if (${test}) {:>'                 .replace('{test}', test) +
+            source +
         '<: }:>'
       );
     } else {
@@ -534,10 +553,10 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('\n') || '';
+      var source = node.innerSource.join('') || '';
       this.source.push(
-        (this.source.pop() || '') +
-        '<: else {:>' +
+        (this.source.pop().slice(0, -2) || '') +
+        ' else {:>' +
              source +
         '<: }:>'
       );
@@ -555,7 +574,11 @@ function onclosetag() {
     return;
   case 'value':
     if (this.lang == 'Xslate') {
-      this.source.push((this.source.pop() || '') + ' :>');
+      var escape = ' | raw';
+      if (node.attributes.escape) {
+        escape = '';
+      }
+      this.source.push((this.source.pop() || '') + escape + ' :>');
     } else {
       if (node.attributes.escape) {
         switch (node.attributes.escape.value) {
@@ -673,7 +696,35 @@ function onclosetag() {
       this.expressions.push(source);
     }
     if (this.lang == 'Xslate') {
-      this.source.push('<: include inc::{name} -> {} :>'.replace('{name}', name));
+      var params = '';
+      if (node.attributes.params) {
+        params = ' { $' + _getAttr(node, 'params') + ' };';
+      } else if (node.attributes['param1-name']) {
+        var i = 1;
+        var key;
+        params = [];
+        while (node.attributes['param'+i+'-name']) {
+          key = _getAttr(node, 'param'+i+'-name');
+          value = _getAttr(node, 'param'+i+'-value');
+          params.push(key + ' => $' + value);
+          i++;
+        }
+        if (params.length > 0) {
+          params = ' { ' + params.join(',') + ' };';
+        } else {
+          params = '';
+        }
+      }
+      var namespace = this.defaults.requireNamespace;
+      if (node.attributes.namespace) {
+        namespace = _getAttr(node, 'namespace');
+      }
+      this.source.push(
+        '<: include {namespace}::{name}{params} :>'
+            .replace('{namespace}', namespace)
+            .replace('{name}', name)
+            .replace('{params}', params)
+      );
     } else {
       this.source.push(
         'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
@@ -688,7 +739,11 @@ function onclosetag() {
 
 function oncdata(text) {
   //  opentag = closetag('text', opentag);
-  this.source.push('"' + escapeJS(text) + '"');
+  if (this.lang == 'Xslate') {
+    this.source.push(text);
+  } else {
+    this.source.push('"' + escapeJS(text) + '"');
+  }
 }
 
 function onscript(text) {
@@ -727,6 +782,13 @@ function ontext(text) {
     break;
   case 'log':
     this.expressions.push(this.expressions.pop() + text);
+    break;
+  case 'comment':
+    if (this.lang == 'Xslate') {
+      this.source.push(text);
+    } else {
+      this.source.push('"' + text + '"');
+    }
     break;
   default:
     if (this.lang == 'Xslate') {
@@ -956,8 +1018,6 @@ var short_tags = {
   source: true,
   wbr: true
 };
-
-
 //var jschars = /[\\'"\/\n\r\t\b\f<>]/g;
 var jschars = /['"\n\r\t\b\f]/g;
 var jshash = {
@@ -982,7 +1042,7 @@ var htmlhash = {
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
-var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break'.split(',');
+var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template'.split(',');
 
 function getName(name) {
   if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
@@ -1012,4 +1072,14 @@ function getLuaExpr(val) {
   val = val.replace(/\?/g, ' and ')
 
   return val;
+}
+
+
+
+function extend (original, extended) {
+  extended = extended || {};
+  for (var key in extended) {
+    original[key] = extended[key];
+  }
+  return original;
 }
