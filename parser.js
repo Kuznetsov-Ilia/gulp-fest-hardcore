@@ -331,7 +331,7 @@ function onclosetag() {
       var source = node.innerSource.join('') || '';
       this.source.push(
         '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
-          '<: my ${index} = $~{value} :>'.replace('{index}', i).replace('{value}', value) +
+          '<: my ${index} = $~{value}; :>'.replace('{index}', i).replace('{value}', value) +
         //'<: for ${list}.kv() -> $pair{key} {:>'.replace('{list}', list).replace('{key}', i) +
           //  '<: my ${index} = $pair{key}.key; :>'.replace('{index}', i).replace('{key}', i) +
            // '<: my ${value} = $pair{key}.value; :>'.replace('{value}', value).replace('{key}', i) +

@@ -1,7 +1,7 @@
 {
   "name": "gulp-fest-hardcore",
-  "version": "0.1.4",
-  "description": "js templator",
+  "version": "0.1.5",
+  "description": "js, lua, Xslate templator",
   "author": "Ilia Kuznetsov",
   "contributors": [{
     "name": "Ilia Kuznetsov",
