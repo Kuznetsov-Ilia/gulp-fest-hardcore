@@ -155,6 +155,7 @@ function onopentag(node) {
   case 'set':
   case 'get':
   case 'require':
+  case 'code':
     openScope(this, node);
     return;
   case 'value':
@@ -311,8 +312,11 @@ function onclosetag() {
   case 'for':
     closeScope(this, node);
     var list = _getAttr(node, 'iterate', 'expr');
-    var i = _getAttr(node, 'index', 'var');
     var value = _getAttr(node, 'value');
+    var i = '_i_' + value;
+    if (node.attributes.index) {
+      i = _getAttr(node, 'index', 'var');
+    }
     if (this.lang === 'lua') {
       var expr = node.innerExpressions.join('\n') || '';
       var source = node.innerSource.join('..') || '""';
@@ -332,9 +336,6 @@ function onclosetag() {
       this.source.push(
         '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
           '<: my ${index} = $~{value}; :>'.replace('{index}', i).replace('{value}', value) +
-        //'<: for ${list}.kv() -> $pair{key} {:>'.replace('{list}', list).replace('{key}', i) +
-          //  '<: my ${index} = $pair{key}.key; :>'.replace('{index}', i).replace('{key}', i) +
-           // '<: my ${value} = $pair{key}.value; :>'.replace('{value}', value).replace('{key}', i) +
             source +
         '<: }:>'
       );
@@ -675,7 +676,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'select', 'expr');
       } else {
-        name = '"' + _getAttr(node, 'select', 'expr') + '-template"';
+        name = _getAttr(node, 'select', 'expr') + ' + "-template"';
       }
     }
     if (this.lang === 'lua') {
@@ -733,6 +734,22 @@ function onclosetag() {
     break;
   case 'log':
     this.expressions.push(this.expressions.pop() + ');');
+    return;
+  case 'code':
+    if (this.lang === _getAttr(node, 'for')) {
+      if (node.innerExpressions && node.innerExpressions.length) {
+        var innerExpressions = node.innerExpressions.join('');
+        if (innerExpressions) {
+          this.expressions.push(innerExpressions);
+        }
+      }
+      if (node.innerSource && node.innerSource.length) {
+        var innerSource = node.innerSource.join('~');
+        if (innerSource) {
+          this.source.push(innerSource);
+        }
+      }
+    }
     return;
   }
 }
@@ -1042,7 +1059,7 @@ var htmlhash = {
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
-var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template'.split(',');
+var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template,code'.split(',');
 
 function getName(name) {
   if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
