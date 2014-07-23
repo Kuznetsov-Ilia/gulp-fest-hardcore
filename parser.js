@@ -155,7 +155,7 @@ function onopentag(node) {
   case 'set':
   case 'get':
   case 'require':
-  case 'code':
+  case 'only':
     openScope(this, node);
     return;
   case 'value':
@@ -332,11 +332,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('') || '';
       this.source.push(
         '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
           '<: my ${index} = $~{value}; :>'.replace('{index}', i).replace('{value}', value) +
-            source +
+            (node.innerExpressions.join(';') || '') +
+            (node.innerSource.join('') || '') +
         '<: }:>'
       );
     } else {
@@ -480,11 +480,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('') || '';
       this.source.push(
         '<: if ({not}${test}) {:>'                          .replace('{not}', not ? '!' : '')
-                                                          .replace('{test}', test) +
-            source +
+                                                            .replace('{test}', test) +
+            (node.innerExpressions.join(';') || '') +
+            (node.innerSource.join('') || '') +
         '<: }:>'
       );
     } else {
@@ -517,11 +517,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('') || '';
       this.source.push(
         (this.source.pop().slice(0, -2) || '') +
         ' else if (${test}) {:>'                 .replace('{test}', test) +
-            source +
+            (node.innerExpressions.join(';') || '') +
+            (node.innerSource.join('') || '') +
         '<: }:>'
       );
     } else {
@@ -554,11 +554,11 @@ function onclosetag() {
         'end\n'
       );
     } else if (this.lang == 'Xslate') {
-      var source = node.innerSource.join('') || '';
       this.source.push(
         (this.source.pop().slice(0, -2) || '') +
         ' else {:>' +
-             source +
+            (node.innerExpressions.join(';') || '') +
+            (node.innerSource.join('') || '') +
         '<: }:>'
       );
     } else {
@@ -735,8 +735,9 @@ function onclosetag() {
   case 'log':
     this.expressions.push(this.expressions.pop() + ');');
     return;
-  case 'code':
-    if (this.lang === _getAttr(node, 'for')) {
+  case 'only':
+    closeScope(this, node);
+    if (this.lang == _getAttr(node, 'for')) {
       if (node.innerExpressions && node.innerExpressions.length) {
         var innerExpressions = node.innerExpressions.join('');
         if (innerExpressions) {
@@ -826,47 +827,48 @@ function onend() {
 }
 
 
-function openScope(_this, node) {
+function openScope(parser, node) {
   switch (node.local) {
   case 'else':
   case 'elseif':
-    node.exprCnt = _this.prevClosed.exprCnt;
+    node.exprCnt = parser.prevClosed.exprCnt;
     break;
   case 'case':
   case 'default':
-    node.exprCnt = _this.parent.exprCnt;
+    node.exprCnt = parser.parent.exprCnt;
     break;
   case 'if':
   case 'for':
   case 'switch':
-    node.exprCnt = _this.exprCnt;
-    _this.exprCnt++;
-    if (_this.lang != 'Xslate') {
-      _this.source.push('__expr#__'.replace('#', node.exprCnt));
+    node.exprCnt = parser.exprCnt;
+    parser.exprCnt++;
+    if (parser.lang != 'Xslate') {
+      parser.source.push('__expr#__'.replace('#', node.exprCnt));
     }
     break;
   case 'get':
   case 'require':
-    node.exprCnt = _this.exprCnt;
-    _this.exprCnt++;
+  case 'only':
+    node.exprCnt = parser.exprCnt;
+    parser.exprCnt++;
     break;
   }
-  node.expressions = _this.expressions;
-  node.source = _this.source;
-  node.parent = _this.parent;
-  _this.expressions = [];
-  _this.source = [];
-  _this.parent = node;
-  _this.prevOpened = node;
+  node.expressions = parser.expressions;
+  node.source = parser.source;
+  node.parent = parser.parent;
+  parser.expressions = [];
+  parser.source = [];
+  parser.parent = node;
+  parser.prevOpened = node;
 }
 
-function closeScope(_this, node) {
-  node.innerSource = _this.source;
-  node.innerExpressions = _this.expressions;
-  _this.source = node.source;
-  _this.expressions = node.expressions;
-  _this.parent = node.parent;
-  _this.prevClosed = node;
+function closeScope(parser, node) {
+  node.innerSource = parser.source;
+  node.innerExpressions = parser.expressions;
+  parser.source = node.source;
+  parser.expressions = node.expressions;
+  parser.parent = node.parent;
+  parser.prevClosed = node;
 }
 
 function getPrevClosed(_this, name) {
@@ -1017,7 +1019,6 @@ function errorMessage(msg, badLine, file, filepath) {
   return ['', 'file: ' + filepath, badPlace.join('\n'), 'At line ' + zeroPadding(badLine + 1, longest) + ': ' + msg].join('\n');
 }
 
-
 var short_tags = {
   area: true,
   base: true,
@@ -1059,7 +1060,7 @@ var htmlhash = {
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
-var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template,code'.split(',');
+var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template,only'.split(',');
 
 function getName(name) {
   if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {
