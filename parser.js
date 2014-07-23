@@ -474,8 +474,8 @@ function onclosetag() {
       var source = node.innerSource.join('..') || '""';
       this.expressions.push(
         'local __expr#__ = ""\n                             \n'.replace('#', node.exprCnt) +
-        'if {test} then\n                               \n'.replace('{test}', test) +
-        '  {expressions}\n                              \n'.replace('{expressions}', expressions) +
+        'if {test} then\n                                   \n'.replace('{test}', test) +
+        '  {expressions}\n                                  \n'.replace('{expressions}', expressions) +
         '  __expr#__ = {source}\n                           \n'.replace('#', node.exprCnt).replace('{source}', source) +
         'end\n'
       );
@@ -699,7 +699,12 @@ function onclosetag() {
     if (this.lang == 'Xslate') {
       var params = '';
       if (node.attributes.params) {
-        params = ' { $' + _getAttr(node, 'params') + ' };';
+        var _params = _getAttr(node, 'params');
+        if (_params.substr(0, 1) == '{') {
+          params = _params + ';';
+        } else {
+          params = ' { $' + _params + ' };';
+        }
       } else if (node.attributes['param1-name']) {
         var i = 1;
         var key;
