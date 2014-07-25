@@ -718,7 +718,7 @@ function onclosetag() {
           i++;
         }
         if (params.length > 0) {
-          params = ' { ' + params.join(',') + ' };';
+          params = ' { ' + params.join(',') + ' }';
         } else {
           params = '';
         }
@@ -728,7 +728,7 @@ function onclosetag() {
         namespace = _getAttr(node, 'namespace');
       }
       this.source.push(
-        '<: include {namespace}::{name}{params} :>'
+        '<: include {namespace}::{name}{params}; :>'
             .replace('{namespace}', namespace)
             .replace('{name}', name)
             .replace('{params}', params)
