@@ -333,10 +333,12 @@ function onclosetag() {
       );
     } else if (this.lang == 'Xslate') {
       this.source.push(
-        '<: for ${list}->${value} {:>'.replace('{list}', list).replace('{value}', value) +
-          '<: my ${index} = $~{value}; :>'.replace('{index}', i).replace('{value}', value) +
-            (node.innerExpressions.join(';') || '') +
-            (node.innerSource.join('') || '') +
+        '<: if ${list}[0] {:>'                .replace('{list}', list) +
+          '<: for ${list}->${value} {:>'      .replace('{list}', list).replace('{value}', value) +
+            '<: my ${index} = $~{value}; :>'  .replace('{index}', i).replace('{value}', value) +
+              (node.innerExpressions          .join(';') || '') +
+              (node.innerSource               .join('') || '') +
+          '<: }:>' +
         '<: }:>'
       );
     } else {
