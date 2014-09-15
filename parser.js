@@ -311,8 +311,22 @@ function onclosetag() {
     return;
   case 'for':
     closeScope(this, node);
-    var list = _getAttr(node, 'iterate', 'expr');
-    var value = _getAttr(node, 'value');
+    var list;
+    var value;
+    if (node.attributes.iterate) {
+      list = _getAttr(node, 'iterate', 'expr');
+    } else if (node.attributes.in) {
+      list = _getAttr(node, 'in', 'expr');
+    } else if (node.attributes.of) {
+      list = _getAttr(node, 'of', 'expr');
+    } else {
+      throw {message: 'nothing to iterate: attribute `in`, `of`, `iterate` must be set'}
+    }
+    if (node.attributes.value) {
+      value = _getAttr(node, 'value');
+    } else if (node.attributes.var) {
+      value = _getAttr(node, 'var');
+    }
     var i = '_i_' + value;
     if (node.attributes.index) {
       i = _getAttr(node, 'index', 'var');

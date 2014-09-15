@@ -320,6 +320,17 @@ require("name3")(__params3__);
   <value>params.items[i]</value>
 </for><!-- abc -->
 
+<!-- params.items = ['a', 'b', 'c'] -->
+<for var="v" of="params.items">
+  <value>v</value>
+</for><!-- abc -->
+
+<!-- params.items = ['a', 'b', 'c'] -->
+<!--  спорно: в принципе там следует ожидать индекс, а не значение -->
+<for var="v" in="params.items">
+  <value>v</value>
+</for><!-- abc -->
+
 <!-- if (params.items && params.items.length)-->
   <for iterate="params.items" index="i" value="v">
     <value>v</value>
