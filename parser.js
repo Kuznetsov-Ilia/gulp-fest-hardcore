@@ -313,10 +313,12 @@ function onclosetag() {
     closeScope(this, node);
     var list;
     var value;
+    var forin = false;
     if (node.attributes.iterate) {
       list = _getAttr(node, 'iterate', 'expr');
     } else if (node.attributes.in) {
       list = _getAttr(node, 'in', 'expr');
+      forin = true;
     } else if (node.attributes.of) {
       list = _getAttr(node, 'of', 'expr');
     } else {
@@ -324,12 +326,20 @@ function onclosetag() {
     }
     if (node.attributes.value) {
       value = _getAttr(node, 'value');
+    } else if (node.attributes.val) {
+      value = _getAttr(node, 'val');
+    } else if (node.attributes.v) {
+      value = _getAttr(node, 'v');
+    } else if (forin) {
+      // var at "for in" is index
     } else if (node.attributes.var) {
       value = _getAttr(node, 'var');
     }
     var i = '_i_' + value;
     if (node.attributes.index) {
       i = _getAttr(node, 'index', 'var');
+    } else if (forin && node.attributes.var) {
+      i = _getAttr(node, 'var');
     }
     if (this.lang === 'lua') {
       var expr = node.innerExpressions.join('\n') || '';
@@ -358,16 +368,23 @@ function onclosetag() {
     } else {
       var expr = node.innerExpressions.join(';') || '';
       var source = node.innerSource.join('+') || '""';
+
       this.expressions.push(
         'var __expr#__ = "";                            '.replace('#', node.exprCnt) +
-        'if ( {list} && {list}.length ) {               '.replace(/\{list\}/g, list) +
-        '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'.replace('{list}', list).replace(/\{i\}/g, i) +
+    (forin
+      ? 'for (var {i} in {list}) {                      '.replace('{i}', i).replace('{list}', list)
+      : 'if ( {list} && {list}.length ) {               '.replace(/\{list\}/g, list) +
+        '  for (var {i} = 0, {i}l = {list}.length; {i} < {i}l ; {i}++) {'.replace('{list}', list).replace(/\{i\}/g, i)
+    ) +
         '    var {value} = {list}[{i}];                 '.replace('{list}', list).replace('{i}', i).replace('{value}', value) +
         '    {expressions}                              '.replace('{expressions}', expr) +
         '    __expr#__ += {source}                      '.replace('#', node.exprCnt).replace('{source}', source) +
         '  }' +
-        '}'
-      );
+        (forin
+          ? ''
+          : '}'
+        )
+      )
     }
     return;
   case 'switch':
@@ -956,7 +973,7 @@ function compileAttributes(attrs, lang) {
     }, n = 0,
     attrValue = '';
   for (i in attrs) {
-    if (i.slice(-3) === '-if') {
+    if (['-if', '_if'].indexOf(i.slice(-3)) !== -1) {
       result.text += ' " + ((' + attrs[i].value + ') ? "' + i.slice(0, -3) + '": "") +"';
     } else {
       attrValue = attrs[i].value.replace(/{{/g, '__DOUBLE_LEFT_CURLY_BRACES__').replace(/}}/g, '__DOUBLE_RIGHT_CURLY_BRACES__');
