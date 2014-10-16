@@ -16,7 +16,7 @@ Fest — это шаблонизатор общего назначения, ко
   - `choose` - заменён на `switch`
   - `when` - заменён на `case`
   - `otherwise` - заменён на `default`
-  - `script` - полигон для усложнений, номинально присутствует
+  - `script` - обычный html тег
   - `var` - заменен на `vars`
 
 * изменены параметры и значения по умолчанию
@@ -29,6 +29,7 @@ Fest — это шаблонизатор общего назначения, ко
   + `case` <- `when`
   + `default` <- `otherwise`
   + `vars` <- `var`
+  + `js`, `lua`, `xslate`, `only` <- `script`
 
 * нада быть внимательным: формируемый шаблон условно делится на выражения и возвращаемое значения.
 ```xml
@@ -454,6 +455,27 @@ switch (z) {
   <insert src="inline-script.js"/>
 </script>
 ```
+### js lua xslate only script
+Раньше в `script` запихивалась js-магия, нужно было разделить эту магию на js, lua и xslate, когда шаблонизатор начал поддерживать эти языки.
+так появился `only` с аттрибутом `for`. далее появильсь более простые обёртки, в виде тегов смысл которых идентичен:
+```xml
+<script><insert src="inline.js" /></script><!-- <script>#контент файла inline.js#</script>  -->
+
+<js>
+var i = function(...){...}
+</js>
+<lua>
+local function i (...){...}
+</lua>
+<xslate>
+my i = include inc::html ->{}
+</xslate>
+
+<only for="js">
+var i = function(...){...}
+</only>
+```
+
 
 ### continue
 ### break

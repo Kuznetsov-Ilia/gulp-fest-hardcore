@@ -8,7 +8,8 @@ function Parser(lang, defaults) {
   var parser = sax.parser(false, {
     trim: true,
     xmlns: true,
-    lowercase: true
+    lowercase: true,
+    noscript: true
   });
   parser.onopentag = onopentag;
   parser.onclosetag = onclosetag;
@@ -156,6 +157,9 @@ function onopentag(node) {
   case 'get':
   case 'require':
   case 'only':
+  case 'js':
+  case 'lua':
+  case 'xslate':
     openScope(this, node);
     return;
   case 'value':
@@ -774,8 +778,17 @@ function onclosetag() {
     this.expressions.push(this.expressions.pop() + ');');
     return;
   case 'only':
+  case 'js':
+  case 'lua':
+  case 'xslate':
     closeScope(this, node);
-    if (this.lang == _getAttr(node, 'for')) {
+    var lang;
+    if (node.attributes.for) {
+      lang = _getAttr(node, 'for');
+    } else {
+      lang = node.local;
+    }
+    if (this.lang == lang) {
       if (node.innerExpressions && node.innerExpressions.length) {
         var innerExpressions = node.innerExpressions.join('');
         if (innerExpressions) {
@@ -1098,7 +1111,7 @@ var htmlhash = {
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
-var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,script,log,continue,break,template,only'.split(',');
+var nsTags = 'doctype,comment,cdata,n,space,if,else,elseif,switch,case,default,value,insert,for,set,get,require,include,param,params,var,vars,log,continue,break,template,only,js,lua,xslate'.split(',');
 
 function getName(name) {
   if (/^[a-z_\.\[\]\"\'$]+$/i.test(name)) {

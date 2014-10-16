@@ -1,6 +1,6 @@
 {
   "name": "gulp-fest-hardcore",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "js, lua, Xslate templator",
   "author": "Ilia Kuznetsov",
   "contributors": [{
@@ -9,7 +9,7 @@
   }],
   "main": "index.js",
   "scripts": {},
-  "dependencies": {
+  "peerDependencies": {
     "through2": "*",
     "gulp-util": "*",
     "sax": "*"
