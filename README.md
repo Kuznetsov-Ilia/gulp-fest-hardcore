@@ -462,13 +462,18 @@ switch (z) {
 <script><insert src="inline.js" /></script><!-- <script>#контент файла inline.js#</script>  -->
 
 <js>
-var i = function(...){...}
+  var i = function(...){...}
 </js>
+
 <lua>
-local function i (...){...}
+  <vars cjson="require 'cjson'" />
+  <script>
+    console.log(<value>cjson.encode(params)</value>)
+  </script>
 </lua>
+
 <xslate>
-my i = include inc::html ->{}
+  my i = include inc::html ->{}
 </xslate>
 
 <only for="js">

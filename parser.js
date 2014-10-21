@@ -29,6 +29,12 @@ function Parser(lang, defaults) {
 
   parser.lang = lang || 'js';
 
+  parser.CONCAT = {
+    js: '+',
+    lua: '..',
+    xslate: '~'
+  }[parser.lang];
+  
   this.parser = parser;
   this.parser.defaults = extend({
     requireNamespace: 'blocks'
@@ -796,7 +802,7 @@ function onclosetag() {
         }
       }
       if (node.innerSource && node.innerSource.length) {
-        var innerSource = node.innerSource.join('~');
+        var innerSource = node.innerSource.join(this.CONCAT);
         if (innerSource) {
           this.source.push(innerSource);
         }
@@ -859,6 +865,12 @@ function ontext(text) {
       this.source.push('"' + text + '"');
     }
     break;
+  case 'js':
+  case 'lua':
+  case 'xslate':
+  case 'only':
+    this.expressions.push(text);
+  break;
   default:
     if (this.lang == 'Xslate') {
       this.source.push(escapeJS(text));
@@ -900,6 +912,9 @@ function openScope(parser, node) {
   case 'get':
   case 'require':
   case 'only':
+  case 'js':
+  case 'lua':
+  case 'xslate':
     node.exprCnt = parser.exprCnt;
     parser.exprCnt++;
     break;
@@ -1102,12 +1117,14 @@ var jshash = {
   //'<': '\\u003C',
   //'>': '\\u003E'
 };
-var htmlchars = /[&<>"]/g;
+var htmlchars = /[&<>"'\/]/g;
 var htmlhash = {
   '&': '&amp;',
   '<': '&lt;',
   '>': '&gt;',
-  '\"': '&quot;'
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;'
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
