@@ -1,0 +1,75 @@
+<div class="page-question hfeed">
+  {text}
+  Трали вали
+  <require name="page-question-head" args="args" />
+  <if test="args.commentPage">
+    <div class="container-for-comments {active}"></div>
+  </if>
+  <elseif test="args.poll">
+    <div class="container-for-poll"></div>
+    <if test="args.owner && !args.poll.total_voted && args.state != 'R'">
+      <require name="page-question-empty" args="args" />
+    </if>
+  </elseif>
+  <else>
+    <div class="container-for-answers">
+    </div>
+    <div class="adv-slot-3216"></div>
+    <if test="args.owner && !+args.anscnt && args.state != 'R'">
+      <require name="page-question-empty" args="args" />
+    </if>
+  </else>
+  <div class="container-for-similar" name="clb{args.rbSimilar}"></div>
+  <div class="h-title h-title-rbseo">
+    <div class="h-title--w">
+      <strong class="h-title--b" style="margin-left: 20px;">Также спрашивают</strong>
+    </div>
+  </div>
+  <div class="rbseo"></div>
+</div>
+
+<!--   var f = document.createFragment(); -->
+<js>
+  var d = document.createElement('div');
+  d.innerHTML = template(args);
+  setBingings(d);
+  d.set = function(key, value) {
+    d._textNodes[key].nodeValue = value;
+  }
+  d.get = function() {
+
+  }
+  return d;
+
+  function setBingings(root) {
+    var originalNode = root.childNodes[0].childNodes[0];
+    var originalNodeValue = originalNode.nodeValue
+    var atexts = originalNodeValue.split('{text}');
+    var textIndex = atexts.indexOf('');
+    var f = document.createDocumentFragment();
+    if (textIndex == 0) {
+      var textNode = document.createTextNode('');
+      var otherNode = document.createTextNode(atexts[1]);
+      f.appendChild(textNode);
+      f.appendChild(otherNode);
+    }
+    if (textIndex == 1) {
+      var textNode = document.createTextNode('');
+      var otherNode = document.createTextNode(atexts[0]);
+      f.appendChild(otherNode);
+      f.appendChild(textNode);
+    }
+    if (textIndex == -1) {
+      var textNode = document.createTextNode('');
+      var firstNode = document.createTextNode(atexts[0]);
+      var lastNode = document.createTextNode(atexts[1]);
+      f.appendChild(firstNode);
+      f.appendChild(textNode);
+      f.appendChild(lastNode);
+    }
+    originalNode.parentNode.replaceChild(f, originalNode);
+
+    root._textNodes['text'] = textNode;
+  }
+
+</js>

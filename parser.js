@@ -4,7 +4,7 @@ var fs = require('fs');
 
 module.exports = Parser;
 
-function Parser(lang, defaults) {
+function Parser(opts) {
   var parser = sax.parser(false, {
     trim: true,
     xmlns: true,
@@ -27,14 +27,20 @@ function Parser(lang, defaults) {
   parser.stack = [];
   parser.fstack = [];
 
-  parser.lang = lang || 'js';
+  var defaults = {
+    lang : 'js'
+  }
+  opts = opts || {};
+  opts = extend(opts, defaults)
+
+  parser.lang = opts.lang;
 
   parser.CONCAT = {
     js: '+',
     lua: '..',
     xslate: '~'
   }[parser.lang];
-  
+  parser.NAME = opts.name;
   this.parser = parser;
   this.parser.defaults = extend({
     requireNamespace: 'blocks'
@@ -63,6 +69,7 @@ Parser.prototype.getSource = function () {
     output = this.parser.source.join('').replace(/:><:/g, '\n');;
   } else {
     output = fs.readFileSync(__dirname + '/tmpl.js').toString()
+      .replace('__NAME__', this.parser.NAME)
       .replace(/__VARS__/, this.parser.expressions.join(';') || '')
       .replace(/__SOURCE__/, this.parser.source.join('+') || '""')
       .replace(/"\+"/g, '');
@@ -178,14 +185,14 @@ function onopentag(node) {
           if (this.lang === 'lua') {
             this.source.push('U.escapeHTML(""');
           } else {
-            this.source.push('$.escapeHTML(""');
+            this.source.push('ESCAPE_HTML(""');
           }
           break;
         case 'js':
           if (this.lang === 'lua') {
             this.source.push('U.escapeJS(""');
           } else {
-            this.source.push('$.escapeJS(""');
+            this.source.push('ESCAPE_JS(""');
           }
           break;
         case 'json':
@@ -193,7 +200,7 @@ function onopentag(node) {
           if (this.lang === 'lua') {
             this.source.push('U.escapeJSON(""');
           } else {
-            this.source.push('$.escapeJSON(""');
+            this.source.push('ESCAPE_JSON(""');
           }
           break;
         }
@@ -711,7 +718,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'name');
       } else {
-        name = '"' + _getAttr(node, 'name') + '-template"';
+        name = '"' + _getAttr(node, 'name') + '"';
       }
     } else if (node.attributes.select) {
       if (this.lang === 'lua') {
@@ -719,7 +726,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'select', 'expr');
       } else {
-        name = _getAttr(node, 'select', 'expr') + ' + "-template"';
+        name = _getAttr(node, 'select', 'expr');
       }
     }
     if (this.lang === 'lua') {
@@ -776,7 +783,7 @@ function onclosetag() {
       );
     } else {
       this.source.push(
-        'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
+        'FEST_TEMPLATES[{name}](__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
       );
     }
     break;
@@ -1021,7 +1028,7 @@ function compileAttributes(attrs, lang) {
             } else if (lang == 'Xslate') {
               result.text += '<:$' + result.expr[n] + ':>';
             } else {
-              result.text += '"+$.escapeHTML(' + result.expr[n] + ')+"';
+              result.text += '"+ESCAPE_HTML(' + result.expr[n] + ')+"';
             }
           } else {
             result.text += escapeJS(escapeHTML(str)).replace(/__DOUBLE_LEFT_CURLY_BRACES__/g, '{').replace(/__DOUBLE_RIGHT_CURLY_BRACES__/g, '}');
@@ -1117,14 +1124,15 @@ var jshash = {
   //'<': '\\u003C',
   //'>': '\\u003E'
 };
-var htmlchars = /[&<>"'\/]/g;
+//var htmlchars = /[&<>"'\/]/g;
+var htmlchars = /[&<>"]/g;
 var htmlhash = {
   '&': '&amp;',
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;'
+/*  "'": '&#39;',
+  '/': '&#x2F;'*/
 };
 
 var reName = /^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[$A-Z\_a-z][$A-Z\_a-z0-9]*$/;
