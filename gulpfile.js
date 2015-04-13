@@ -30,6 +30,31 @@ gulp.task('fest-js', function () {
     }))
     .pipe(gulp.dest('test/js'));
 })
+var concat = require('gulp-concat');
+gulp.task('dom', function () {
+  return gulp.src('test/new.xml')
+    .pipe(rename({extname:'.js'}))
+    .on('data', setTmplName)
+    .pipe(festHardcore({name:1}))
+    .pipe(concat('index.js'))
+    .pipe(festHardcore({finalize: 1}))
+    //.pipe(beautify(conf.beautify))
+    .pipe(gulp.dest('test'));
+});
+
+function setTmplName(file) {
+  var name = file.path
+      .replace(file.base, '')
+      .replace('/template/', '/')
+      .replace('/index.js', '/')
+      .replace('.js', '');
+  
+  if (name[name.length-1] == '/') {
+    name = name.slice(0, -1);
+  }
+  file.name = name;
+}
+
 //var spawn = require('child_process').spawn;
 
 /*gulp.watch('test/lua/.lua', function (event) {

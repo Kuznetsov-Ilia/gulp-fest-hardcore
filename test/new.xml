@@ -1,30 +1,33 @@
 <div class="page-question hfeed">
-  {text}
+  <b>dddd</b>
+  <text name="text" />
+
   Трали вали
-  <require name="page-question-head" args="args" />
-  <if test="args.commentPage">
-    <div class="container-for-comments {active}"></div>
-  </if>
-  <elseif test="args.poll">
+  
+  <div>
+    <template name="page-question-head" />
+    <div if="isCommentPage" class="container-for-comments {active}"></div>
+  </div>
+
+  <div if="isPoll">
     <div class="container-for-poll"></div>
-    <if test="args.owner && !args.poll.total_voted && args.state != 'R'">
-      <require name="page-question-empty" args="args" />
-    </if>
-  </elseif>
-  <else>
-    <div class="container-for-answers">
-    </div>
+    <template if="isMakeLeader" name="page-question-empty" />
+  </div>
+
+  <div if="isQuestion">
+    <div class="container-for-answers"></div>
     <div class="adv-slot-3216"></div>
-    <if test="args.owner && !+args.anscnt && args.state != 'R'">
-      <require name="page-question-empty" args="args" />
-    </if>
-  </else>
-  <div class="container-for-similar" name="clb{args.rbSimilar}"></div>
-  <div class="h-title h-title-rbseo">
+    <template if="isMakeLeader" name="page-question-empty" />
+  </div>
+  
+  <div class="container-for-similar" name="{clbSimilar}"></div>
+  
+  <div if="rbseo" class="h-title h-title-rbseo">
     <div class="h-title--w">
       <strong class="h-title--b" style="margin-left: 20px;">Также спрашивают</strong>
     </div>
   </div>
+
   <div class="rbseo"></div>
 </div>
 

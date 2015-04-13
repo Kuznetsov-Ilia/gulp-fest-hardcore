@@ -816,6 +816,9 @@ function onclosetag() {
       }
     }
     return;
+  case 'text':
+    //nodes.push('{}')
+    return;
   }
 }
 
@@ -882,6 +885,7 @@ function ontext(text) {
     if (this.lang == 'Xslate') {
       this.source.push(escapeJS(text));
     } else {
+      //console.log('[[' + text + ']]');
       this.source.push('"' + escapeJS(text) + '"');
     }
     break;
