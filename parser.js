@@ -711,7 +711,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'name');
       } else {
-        name = '"' + _getAttr(node, 'name') + '-template"';
+        name = '"' + _getAttr(node, 'name') + '"';
       }
     } else if (node.attributes.select) {
       if (this.lang === 'lua') {
@@ -719,7 +719,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'select', 'expr');
       } else {
-        name = _getAttr(node, 'select', 'expr') + ' + "-template"';
+        name = _getAttr(node, 'select', 'expr');
       }
     }
     if (this.lang === 'lua') {
