@@ -1,6 +1,6 @@
 {
   "name": "gulp-fest-hardcore",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "js, lua, Xslate templator",
   "author": "Ilia Kuznetsov",
   "contributors": [{
@@ -9,12 +9,12 @@
   }],
   "main": "index.js",
   "scripts": {},
-  "peerDependencies": {
-    "through2": "*",
-    "gulp-util": "*",
+  "dependencies": {
     "sax": "*"
   },
   "devDependencies": {
+    "through2": "*",
+    "gulp-util": "*",
     "gulp": "*",
     "gulp-rename": "*",
     "gulp-beautify": "*",
@@ -25,7 +25,7 @@
     "url": "https://github.com/QiV/gulp-fest-hardcore.git"
   },
   "keywords": [
-    "gulpplugin"
+    "gulpplugin", "webpackplugin"
   ],
   "license": "MIT"
 }
