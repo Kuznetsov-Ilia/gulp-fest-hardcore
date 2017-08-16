@@ -70,6 +70,24 @@ Parser.prototype.getSource = function () {
 
   return new Buffer(output);
 }
+Parser.prototype.getString = function () {
+  var output;
+  if (this.parser.lang === 'lua') {
+    output = fs.readFileSync(__dirname + '/tmpl.lua').toString()
+      .replace(/__VARS__/, this.parser.expressions.join('\n') || '')
+      .replace(/__SOURCE__/, this.parser.source.join('..') || '""')
+      .replace(/"\.\."/g, '');
+  } else if (this.parser.lang == 'Xslate') {
+    output = this.parser.source.join('').replace(/:><:/g, '\n');;
+  } else {
+    output = fs.readFileSync(__dirname + '/tmpl.js').toString()
+      .replace(/__VARS__/, this.parser.expressions.join(';') || '')
+      .replace(/__SOURCE__/, this.parser.source.join('+') || '""')
+      .replace(/"\+"/g, '');
+  }
+
+  return output;
+}
 
 
 function escapeJS(s) {
@@ -711,7 +729,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'name');
       } else {
-        name = '"' + _getAttr(node, 'name') + '-template"';
+        name = '"' + _getAttr(node, 'name') + '"';
       }
     } else if (node.attributes.select) {
       if (this.lang === 'lua') {
@@ -719,7 +737,7 @@ function onclosetag() {
       } else if (this.lang == 'Xslate') {
         name = _getAttr(node, 'select', 'expr');
       } else {
-        name = _getAttr(node, 'select', 'expr') + ' + "-template"';
+        name = _getAttr(node, 'select', 'expr');
       }
     }
     if (this.lang === 'lua') {
@@ -775,9 +793,9 @@ function onclosetag() {
             .replace('{params}', params)
       );
     } else {
-      this.source.push(
-        'require({name})(__params#__)                                 '.replace('{name}', name).replace('#', node.exprCnt)
-      );
+      //this.expressions.push(`import imported${node.exprCnt} from '${name}';`);
+      this.source.push('require({name})(__params#__)'.replace('{name}', name).replace('#', node.exprCnt));
+      //this.source.push(`imported${node.exprCnt}(__params${node.exprCnt}__)`);
     }
     break;
   case 'log':
