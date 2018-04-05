@@ -1,20 +1,20 @@
 {
-  "name": "gulp-fest-hardcore",
-  "version": "3.0.0",
+  "name": "otvet-fest",
+  "version": "2.0.0",
   "description": "js, lua, Xslate templator",
   "author": "Ilia Kuznetsov",
-  "contributors": [{
-    "name": "Ilia Kuznetsov",
-    "email": "killxxxvi@mail.ru"
-  }],
+  "contributors": [
+    {
+      "name": "Ilia Kuznetsov",
+      "email": "killxxxvi@mail.ru"
+    }
+  ],
   "main": "index.js",
   "scripts": {},
-  "peerDependencies": {
+  "dependencies": {
     "through2": "*",
     "gulp-util": "*",
-    "sax": "*"
-  },
-  "devDependencies": {
+    "sax": "0.6.1",
     "gulp": "*",
     "gulp-rename": "*",
     "gulp-beautify": "*",

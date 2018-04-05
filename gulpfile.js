@@ -5,7 +5,7 @@ var beautify = require('gulp-beautify');
 var festHardcore = require('./index.js');
 //var spawn = require('gulp-spawn-shim');
 //var log = gutil.log;
-gulp.task('default', ['fest-lua', 'fest-js']);
+gulp.task('default', [/*'fest-lua', */'fest-js']);
 
 gulp.task('fest-lua', function () {
   return gulp.src('test/xml/*.xml')
@@ -25,9 +25,6 @@ gulp.task('fest-js', function () {
       path.extname = '.js'
     }))
     .pipe(festHardcore())
-    .pipe(beautify({
-      indentSize: 2
-    }))
     .pipe(gulp.dest('test/js'));
 })
 //var spawn = require('child_process').spawn;
